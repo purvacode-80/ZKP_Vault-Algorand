@@ -9,7 +9,7 @@ import './App.css';
 const peraWallet = new PeraWalletConnect();
 
 // Algorand App ID (replace with your deployed contract ID)
-const APP_ID = 0; // TODO: Replace with actual App ID after deployment
+const APP_ID = 755317770; // TODO: Replace with actual App ID after deployment
 
 interface AppProps {}
 

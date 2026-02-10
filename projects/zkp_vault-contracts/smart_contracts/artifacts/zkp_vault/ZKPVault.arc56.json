@@ -1,0 +1,215 @@
+{
+    "name": "ZKPVault",
+    "structs": {},
+    "methods": [
+        {
+            "name": "create_application",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [
+                    "NoOp"
+                ],
+                "call": []
+            },
+            "readonly": false,
+            "desc": "Initialize the contract",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "submit_proof",
+            "args": [
+                {
+                    "type": "string",
+                    "name": "exam_id",
+                    "desc": "The exam identifier"
+                },
+                {
+                    "type": "string",
+                    "name": "student_hash",
+                    "desc": "Hashed student identity"
+                },
+                {
+                    "type": "uint64",
+                    "name": "trust_score",
+                    "desc": "Final trust score (0-100)"
+                },
+                {
+                    "type": "string",
+                    "name": "proof_hash",
+                    "desc": "SHA-256 hash of the proof data"
+                }
+            ],
+            "returns": {
+                "type": "string",
+                "desc": "Success message with transaction details"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Submit exam proof for a student",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "verify_submission",
+            "args": [
+                {
+                    "type": "string",
+                    "name": "exam_id",
+                    "desc": "The exam identifier"
+                },
+                {
+                    "type": "string",
+                    "name": "student_hash",
+                    "desc": "Hashed student identity"
+                },
+                {
+                    "type": "uint64",
+                    "name": "trust_score",
+                    "desc": "Final trust score (0-100)"
+                },
+                {
+                    "type": "string",
+                    "name": "proof_hash",
+                    "desc": "SHA-256 hash of the proof data"
+                }
+            ],
+            "returns": {
+                "type": "bool",
+                "desc": "True if valid"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Verify that a proof submission is valid",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "get_contract_info",
+            "args": [],
+            "returns": {
+                "type": "string",
+                "desc": "Contract name and version"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": "Get contract information",
+            "events": [],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "desc": "\n    ZKP-Vault Smart Contract\n    Privacy-preserving AI proctoring on Algorand\n    \n    Simplified version using global state for demo purposes\n    ",
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 0,
+                "bytes": 0
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {},
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        169
+                    ],
+                    "errorMessage": "Trust score cannot exceed 100"
+                },
+                {
+                    "pc": [
+                        126,
+                        138,
+                        158,
+                        214,
+                        226,
+                        246
+                    ],
+                    "errorMessage": "invalid array length header"
+                },
+                {
+                    "pc": [
+                        132,
+                        144,
+                        164,
+                        220,
+                        232,
+                        252
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>"
+                },
+                {
+                    "pc": [
+                        152,
+                        240
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.uint64"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAwIDIgMSA4CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjExCiAgICAvLyBjbGFzcyBaS1BWYXVsdChBUkM0Q29udHJhY3QpOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYnogbWFpbl9jcmVhdGVfTm9PcEA3CiAgICBwdXNoYnl0ZXNzIDB4YTg4ZWI0OTAgMHhkOGJkOTM5ZiAweDJlZWViYmI5IC8vIG1ldGhvZCAic3VibWl0X3Byb29mKHN0cmluZyxzdHJpbmcsdWludDY0LHN0cmluZylzdHJpbmciLCBtZXRob2QgInZlcmlmeV9zdWJtaXNzaW9uKHN0cmluZyxzdHJpbmcsdWludDY0LHN0cmluZylib29sIiwgbWV0aG9kICJnZXRfY29udHJhY3RfaW5mbygpc3RyaW5nIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggc3VibWl0X3Byb29mIHZlcmlmeV9zdWJtaXNzaW9uIG1haW5fZ2V0X2NvbnRyYWN0X2luZm9fcm91dGVANQogICAgZXJyCgptYWluX2dldF9jb250cmFjdF9pbmZvX3JvdXRlQDU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjgyCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAzMTVhNGI1MDJkNTY2MTc1NmM3NDIwNzYzMTJlMzAyMDJkMjA1MDcyNjk3NjYxNjM3OTJkNTA3MjY1NzM2NTcyNzY2OTZlNjcyMDQxNDkyMDUwNzI2ZjYzNzQ2ZjcyNjk2ZTY3CiAgICBsb2cKICAgIGludGNfMiAvLyAxCiAgICByZXR1cm4KCm1haW5fY3JlYXRlX05vT3BANzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6MTEKICAgIC8vIGNsYXNzIFpLUFZhdWx0KEFSQzRDb250cmFjdCk6CiAgICBwdXNoYnl0ZXMgMHg3NTJjM2FjMCAvLyBtZXRob2QgImNyZWF0ZV9hcHBsaWNhdGlvbigpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fY3JlYXRlX2FwcGxpY2F0aW9uX3JvdXRlQDgKICAgIGVycgoKbWFpbl9jcmVhdGVfYXBwbGljYXRpb25fcm91dGVAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6MTkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChjcmVhdGU9InJlcXVpcmUiKQogICAgaW50Y18yIC8vIDEKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy56a3BfdmF1bHQuY29udHJhY3QuWktQVmF1bHQuc3VibWl0X3Byb29mW3JvdXRpbmddKCkgLT4gdm9pZDoKc3VibWl0X3Byb29mOgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weToyNAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzEgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIGR1cAogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMSAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwogICAgZHVwCiAgICBsZW4KICAgIGludGNfMyAvLyA4CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LnVpbnQ2NAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNAogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18xIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjQ0LTQ1CiAgICAvLyAjIFZlcmlmeSB0cnVzdCBzY29yZSBpcyB2YWxpZCAoMC0xMDApCiAgICAvLyBhc3NlcnQgdHJ1c3Rfc2NvcmUubmF0aXZlIDw9IFVJbnQ2NCgxMDApLCAiVHJ1c3Qgc2NvcmUgY2Fubm90IGV4Y2VlZCAxMDAiCiAgICBidG9pCiAgICBwdXNoaW50IDEwMAogICAgPD0KICAgIGFzc2VydCAvLyBUcnVzdCBzY29yZSBjYW5ub3QgZXhjZWVkIDEwMAogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weToyNAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMWM1MDcyNmY2ZjY2MjA3Mzc1NjI2ZDY5NzQ3NDY1NjQyMDczNzU2MzYzNjU3MzczNjY3NTZjNmM3OQogICAgbG9nCiAgICBpbnRjXzIgLy8gMQogICAgcmV0dXJuCgoKLy8gc21hcnRfY29udHJhY3RzLnprcF92YXVsdC5jb250cmFjdC5aS1BWYXVsdC52ZXJpZnlfc3VibWlzc2lvbltyb3V0aW5nXSgpIC0+IHZvaWQ6CnZlcmlmeV9zdWJtaXNzaW9uOgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weTo1NAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzEgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIGR1cAogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMSAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwogICAgZHVwCiAgICBsZW4KICAgIGludGNfMyAvLyA4CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LnVpbnQ2NAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNAogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18xIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5Ojc2CiAgICAvLyB0cnVzdF9zY29yZS5uYXRpdmUgPD0gVUludDY0KDEwMCkgYW5kCiAgICBidG9pCiAgICBwdXNoaW50IDEwMAogICAgPD0KICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6NzYtNzcKICAgIC8vIHRydXN0X3Njb3JlLm5hdGl2ZSA8PSBVSW50NjQoMTAwKSBhbmQKICAgIC8vIHRydXN0X3Njb3JlLm5hdGl2ZSA+PSBVSW50NjQoMCkKICAgIGJ6IHZlcmlmeV9zdWJtaXNzaW9uX2Jvb2xfZmFsc2VANAogICAgaW50Y18yIC8vIDEKCnZlcmlmeV9zdWJtaXNzaW9uX2Jvb2xfbWVyZ2VANToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6ODAKICAgIC8vIHJldHVybiBhcmM0LkJvb2woaXNfdmFsaWQpCiAgICBwdXNoYnl0ZXMgMHgwMAogICAgaW50Y18wIC8vIDAKICAgIHVuY292ZXIgMgogICAgc2V0Yml0CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjU0CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18yIC8vIDEKICAgIHJldHVybgoKdmVyaWZ5X3N1Ym1pc3Npb25fYm9vbF9mYWxzZUA0OgogICAgaW50Y18wIC8vIDAKICAgIGIgdmVyaWZ5X3N1Ym1pc3Npb25fYm9vbF9tZXJnZUA1Cg==",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="
+    },
+    "byteCode": {
+        "approval": "CyAEAAIBCDEZFEQxGEEAWYIDBKiOtJAE2L2TnwQu7ru5NhoAjgMATQClAAEAgDcVH3x1ADFaS1AtVmF1bHQgdjEuMCAtIFByaXZhY3ktUHJlc2VydmluZyBBSSBQcm9jdG9yaW5nsCRDgAR1LDrANhoAjgEAAQAkQzYaAUkiWSMITBUSRDYaAkkiWSMITBUSRDYaA0kVJRJENhoESSJZIwhMFRJEF4FkDkSAIhUffHUAHFByb29mIHN1Ym1pdHRlZCBzdWNjZXNzZnVsbHmwJEM2GgFJIlkjCEwVEkQ2GgJJIlkjCEwVEkQ2GgNJFSUSRDYaBEkiWSMITBUSRBeBZA5BABMkgAEAIk8CVIAEFR98dUxQsCRDIkL/6g==",
+        "clear": "C4EBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 7,
+            "patch": 1
+        }
+    },
+    "events": [],
+    "templateVariables": {}
+}
