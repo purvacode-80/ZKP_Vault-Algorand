@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { PeraWalletConnect } from '@perawallet/connect';
 import { StudentExam } from './components/StudentExam';
 import { AdminDashboard } from './components/AdminDashboard';
-import { setAppId } from './services/algorand-service';
+import { setAppId } from './components/services/algorand-service';
 import './App.css';
 
 // Initialize Pera Wallet
 const peraWallet = new PeraWalletConnect();
 
 // Algorand App ID (replace with your deployed contract ID)
-const APP_ID = 755317770; // TODO: Replace with actual App ID after deployment
+const APP_ID : number = 755317770; // TODO: Replace with actual App ID after deployment
 
 interface AppProps {}
 

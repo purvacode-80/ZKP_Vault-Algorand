@@ -1,9 +1,9 @@
 // src/components/Home.tsx
 import { useWallet } from '@txnlab/use-wallet-react'
 import React, { useState } from 'react'
-import ConnectWallet from './components/ConnectWallet'
-import Transact from './components/Transact'
-import AppCalls from './components/AppCalls'
+// import ConnectWallet from './components/ConnectWallet'
+// import Transact from './components/Transact'
+// import AppCalls from './components/AppCalls'
 
 interface HomeProps {}
 
@@ -64,9 +64,9 @@ const Home: React.FC<HomeProps> = () => {
             )}
           </div>
 
-          <ConnectWallet openModal={openWalletModal} closeModal={toggleWalletModal} />
+          {/* <ConnectWallet openModal={openWalletModal} closeModal={toggleWalletModal} />
           <Transact openModal={openDemoModal} setModalState={setOpenDemoModal} />
-          <AppCalls openModal={appCallsDemoModal} setModalState={setAppCallsDemoModal} />
+          <AppCalls openModal={appCallsDemoModal} setModalState={setAppCallsDemoModal} /> */}
         </div>
       </div>
     </div>

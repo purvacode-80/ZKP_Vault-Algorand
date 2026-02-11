@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getExamProofs, getExamMetadata, getExplorerUrl } from '../services/algorand-service';
+import { getExamProofs, getExamMetadata, getExplorerUrl } from './services/algorand-service';
 import './AdminDashboard.css';
 
 interface ProofData {

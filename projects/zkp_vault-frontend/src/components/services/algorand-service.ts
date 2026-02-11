@@ -11,7 +11,7 @@ const ALGOD_PORT = 443;
 export const algodClient = new algosdk.Algodv2(ALGOD_TOKEN, ALGOD_SERVER, ALGOD_PORT);
 
 // Contract app ID (set after deployment)
-let APP_ID = 0; // TODO: Replace with actual App ID after deployment
+let APP_ID = 755317770; // TODO: Replace with actual App ID after deployment
 
 export function setAppId(appId: number) {
   APP_ID = appId;
@@ -31,10 +31,10 @@ export async function submitProofToBlockchain(
 ): Promise<string> {
   try {
     console.log('📤 Submitting proof to Algorand...');
-    
+
     // Get suggested transaction parameters
     const suggestedParams = await algodClient.getTransactionParams().do();
-    
+
     // Encode application arguments
     const appArgs = [
       new Uint8Array(Buffer.from('submit_proof')),
@@ -43,25 +43,27 @@ export async function submitProofToBlockchain(
       algosdk.encodeUint64(sessionData.trustScore),
       new Uint8Array(Buffer.from(sessionData.proofHash)),
     ];
-    
-    // Create application call transaction
+
+    const account = algosdk.generateAccount();
+
     const txn = algosdk.makeApplicationNoOpTxnFromObject({
-      from: senderAddress,
+      sender: account.addr,
       appIndex: APP_ID,
       appArgs,
       suggestedParams,
     });
-    
+
+
     // Sign transaction
     const signedTxns = await signerFunction([txn]);
-    
+
     // Submit transaction
     const response = await algodClient.sendRawTransaction(signedTxns).do();
-    const txId = response.txId;
-    
+    const txId = response.txid;
+
     // Wait for confirmation
     await waitForConfirmation(txId);
-    
+
     console.log('✅ Proof submitted! Transaction ID:', txId);
     return txId;
   } catch (error) {
@@ -75,25 +77,27 @@ export async function submitProofToBlockchain(
  */
 async function waitForConfirmation(txId: string, timeout: number = 10): Promise<any> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout * 1000) {
     try {
       const pendingInfo = await algodClient.pendingTransactionInformation(txId).do();
-      
-      if (pendingInfo.confirmedRound !== null && pendingInfo.confirmedRound > 0) {
-        return pendingInfo;
-      }
-      
+
+      const round = pendingInfo.confirmedRound ?? 0;
+      if (round > 0) {
+              return pendingInfo;
+            }
+
+
       if (pendingInfo.poolError != null && pendingInfo.poolError.length > 0) {
         throw new Error(`Transaction rejected: ${pendingInfo.poolError}`);
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error) {
       throw error;
     }
   }
-  
+
   throw new Error('Transaction confirmation timeout');
 }
 
@@ -101,10 +105,10 @@ async function waitForConfirmation(txId: string, timeout: number = 10): Promise<
  * Get Algorand Explorer URL for a transaction
  */
 export function getExplorerUrl(txId: string, network: 'testnet' | 'mainnet' = 'testnet'): string {
-  const baseUrl = network === 'mainnet' 
+  const baseUrl = network === 'mainnet'
     ? 'https://algoexplorer.io/tx/'
     : 'https://testnet.algoexplorer.io/tx/';
-  
+
   return `${baseUrl}${txId}`;
 }
 
