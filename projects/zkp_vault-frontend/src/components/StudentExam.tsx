@@ -108,38 +108,38 @@ export const StudentExam: React.FC<StudentExamProps> = ({
   }, [isProctoring]);
 
   // Detection loop
-  const detectFrame = async () => {
-    if (!videoRef.current || !isProctoring) return;
+  // const detectFrame = async () => {
+  //   if (!videoRef.current || !isProctoring) return;
 
-    try {
-      // Analyze current frame
-      const detection = await aiProctor.analyzeFrame(videoRef.current);
-      setCurrentDetection(detection);
+  //   try {
+  //     // Analyze current frame
+  //     const detection = await aiProctor.analyzeFrame(videoRef.current);
+  //     setCurrentDetection(detection);
 
-      // Store detection
-      setDetections(prev => [...prev, detection]);
+  //     // Store detection
+  //     setDetections(prev => [...prev, detection]);
 
-      // Check for incidents
-      const newIncidents = aiProctor.checkForIncidents(detection, incidents);
-      if (newIncidents.length > incidents.length) {
-        setIncidents(newIncidents);
-      }
+  //     // Check for incidents
+  //     const newIncidents = aiProctor.checkForIncidents(detection, incidents);
+  //     if (newIncidents.length > incidents.length) {
+  //       setIncidents(newIncidents);
+  //     }
 
-      // Update trust score
-      const score = aiProctor.calculateTrustScore({
-        incidents: newIncidents,
-      });
-      setTrustScore(score);
+  //     // Update trust score
+  //     const score = aiProctor.calculateTrustScore({
+  //       incidents: newIncidents,
+  //     });
+  //     setTrustScore(score);
 
-      // Draw detection overlays
-      drawOverlays(detection);
+  //     // Draw detection overlays
+  //     drawOverlays(detection);
 
-      // Continue detection loop
-      animationFrameRef.current = requestAnimationFrame(detectFrame);
-    } catch (error) {
-      console.error('Detection error:', error);
-    }
-  };
+  //     // Continue detection loop
+  //     animationFrameRef.current = requestAnimationFrame(detectFrame);
+  //   } catch (error) {
+  //     console.error('Detection error:', error);
+  //   }
+  // };
 
   // Draw AI detection overlays on canvas
   const drawOverlays = (detection: DetectionResult) => {

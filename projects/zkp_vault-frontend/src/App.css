@@ -403,3 +403,9 @@
 .feature:nth-child(4) {
   animation-delay: 0.3s;
 }
+
+// Exam View
+
+.biew-header {
+  text-color: white;
+}

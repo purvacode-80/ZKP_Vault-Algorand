@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PeraWalletConnect } from '@perawallet/connect';
 import { StudentExam } from './components/StudentExam';
 import { AdminDashboard } from './components/AdminDashboard';
-import { setAppId, submitProofToBlockchain, getExplorerUrl } from './services/algorand-service';
+import { setAppId, submitProofToBlockchain, getExplorerUrl } from './components/services/algorand-service';
 import './App.css';
 
 // Initialize Pera Wallet
@@ -20,7 +20,7 @@ const App: React.FC<AppProps> = () => {
   const [examId, setExamId] = useState('');
   const [studentId, setStudentId] = useState('');
   const [examDuration, setExamDuration] = useState(60);
-  
+
   // Create exam form
   const [newExamId, setNewExamId] = useState('');
   const [newExamDuration, setNewExamDuration] = useState(60);
@@ -71,7 +71,7 @@ const App: React.FC<AppProps> = () => {
 
   const handleExamComplete = async (sessionData: any) => {
     console.log('📊 Exam completed:', sessionData);
-    
+
     // Save to localStorage for demo
     const proofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
     proofs.push({
@@ -83,13 +83,13 @@ const App: React.FC<AppProps> = () => {
       incidents: sessionData.incidents.length,
     });
     localStorage.setItem('zkp_vault_proofs', JSON.stringify(proofs));
-    
+
     // Try to submit to blockchain
     try {
       if (accountAddress) {
         const txId = await submitProofToBlockchain(sessionData, accountAddress, signTransactions);
         const explorerUrl = getExplorerUrl(txId);
-        
+
         alert(`✅ Exam completed!\n\nTrust Score: ${sessionData.trustScore}\nProof Hash: ${sessionData.proofHash}\n\nView on Algorand Explorer:\n${explorerUrl}`);
       } else {
         alert(`✅ Exam completed locally!\n\nTrust Score: ${sessionData.trustScore}\nIncidents: ${sessionData.incidents.length}\n\n(Connect wallet to submit to blockchain)`);
@@ -98,7 +98,7 @@ const App: React.FC<AppProps> = () => {
       console.error('Blockchain submission error:', error);
       alert(`✅ Exam completed and saved locally!\n\nTrust Score: ${sessionData.trustScore}\n\n(Blockchain submission failed, but proof is saved)`);
     }
-    
+
     setCurrentView('home');
   };
 
@@ -107,7 +107,7 @@ const App: React.FC<AppProps> = () => {
       alert('Please enter an exam ID');
       return;
     }
-    
+
     // Save exam to localStorage
     const exams = JSON.parse(localStorage.getItem('zkp_vault_exams') || '[]');
     exams.push({
@@ -118,9 +118,9 @@ const App: React.FC<AppProps> = () => {
       createdBy: accountAddress || 'unknown',
     });
     localStorage.setItem('zkp_vault_exams', JSON.stringify(exams));
-    
+
     alert(`✅ Exam "${newExamId}" created successfully!`);
-    
+
     // Reset form
     setNewExamId('');
     setNewExamDuration(60);
@@ -232,7 +232,7 @@ const App: React.FC<AppProps> = () => {
             <div className="card-icon">👨‍🎓</div>
             <h3>Take Exam</h3>
             <p>Start your proctored exam with AI monitoring</p>
-            
+
             <div className="form-group">
               <label>Exam ID</label>
               <input
@@ -242,7 +242,7 @@ const App: React.FC<AppProps> = () => {
                 placeholder="e.g., CS101_FINAL_2024"
               />
             </div>
-            
+
             <div className="form-group">
               <label>Student ID</label>
               <input
@@ -252,7 +252,7 @@ const App: React.FC<AppProps> = () => {
                 placeholder="e.g., STU12345"
               />
             </div>
-            
+
             <div className="form-group">
               <label>Duration (minutes)</label>
               <input
@@ -277,7 +277,7 @@ const App: React.FC<AppProps> = () => {
             <div className="card-icon">👨‍💼</div>
             <h3>Admin Dashboard</h3>
             <p>View student proofs and exam analytics</p>
-            
+
             <div className="form-group">
               <label>Exam ID to Monitor</label>
               <input
