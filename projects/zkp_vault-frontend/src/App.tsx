@@ -2,25 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { PeraWalletConnect } from '@perawallet/connect';
 import { StudentExam } from './components/StudentExam';
 import { AdminDashboard } from './components/AdminDashboard';
-import { setAppId, submitProofToBlockchain, getExplorerUrl } from './components/services/algorand-service';
+import { setAppId, submitProofToBlockchain, getExplorerUrl } from './services/algorand-service';
 import './App.css';
 
 // Initialize Pera Wallet
 const peraWallet = new PeraWalletConnect();
 
 // Algorand App ID
-const APP_ID = 755317770; // Your deployed App ID
+const APP_ID = 755317770;
 
-interface AppProps {}
+interface Exam {
+  examId: string;
+  duration: number;
+  minTrustScore: number;
+  createdAt: number;
+  createdBy: string;
+}
 
-const App: React.FC<AppProps> = () => {
+const App: React.FC = () => {
   const [accountAddress, setAccountAddress] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'student' | 'admin' | 'create-exam'>('home');
   const [examId, setExamId] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [examDuration, setExamDuration] = useState(60);
-
+  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+  
   // Create exam form
   const [newExamId, setNewExamId] = useState('');
   const [newExamDuration, setNewExamDuration] = useState(60);
@@ -28,8 +34,6 @@ const App: React.FC<AppProps> = () => {
 
   useEffect(() => {
     setAppId(APP_ID);
-
-    // Reconnect to previous session if exists
     peraWallet.reconnectSession().then((accounts) => {
       if (accounts.length > 0) {
         setAccountAddress(accounts[0]);
@@ -71,8 +75,8 @@ const App: React.FC<AppProps> = () => {
 
   const handleExamComplete = async (sessionData: any) => {
     console.log('📊 Exam completed:', sessionData);
-
-    // Save to localStorage for demo
+    
+    // Save to localStorage
     const proofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
     proofs.push({
       examId: sessionData.examId,
@@ -83,13 +87,12 @@ const App: React.FC<AppProps> = () => {
       incidents: sessionData.incidents.length,
     });
     localStorage.setItem('zkp_vault_proofs', JSON.stringify(proofs));
-
-    // Try to submit to blockchain
+    
+    // Try blockchain submission
     try {
       if (accountAddress) {
         const txId = await submitProofToBlockchain(sessionData, accountAddress, signTransactions);
         const explorerUrl = getExplorerUrl(txId);
-
         alert(`✅ Exam completed!\n\nTrust Score: ${sessionData.trustScore}\nProof Hash: ${sessionData.proofHash}\n\nView on Algorand Explorer:\n${explorerUrl}`);
       } else {
         alert(`✅ Exam completed locally!\n\nTrust Score: ${sessionData.trustScore}\nIncidents: ${sessionData.incidents.length}\n\n(Connect wallet to submit to blockchain)`);
@@ -98,18 +101,23 @@ const App: React.FC<AppProps> = () => {
       console.error('Blockchain submission error:', error);
       alert(`✅ Exam completed and saved locally!\n\nTrust Score: ${sessionData.trustScore}\n\n(Blockchain submission failed, but proof is saved)`);
     }
-
+    
     setCurrentView('home');
   };
 
   const handleCreateExam = () => {
-    if (!newExamId) {
+    if (!newExamId.trim()) {
       alert('Please enter an exam ID');
       return;
     }
-
-    // Save exam to localStorage
+    
+    // Check if exam already exists
     const exams = JSON.parse(localStorage.getItem('zkp_vault_exams') || '[]');
+    if (exams.some((e: Exam) => e.examId === newExamId)) {
+      alert('An exam with this ID already exists!');
+      return;
+    }
+    
     exams.push({
       examId: newExamId,
       duration: newExamDuration,
@@ -118,14 +126,38 @@ const App: React.FC<AppProps> = () => {
       createdBy: accountAddress || 'unknown',
     });
     localStorage.setItem('zkp_vault_exams', JSON.stringify(exams));
-
+    
     alert(`✅ Exam "${newExamId}" created successfully!`);
-
+    
     // Reset form
     setNewExamId('');
     setNewExamDuration(60);
     setNewExamMinScore(70);
     setCurrentView('home');
+  };
+
+  const handleStartExam = () => {
+    if (!examId.trim()) {
+      alert('Please enter an exam ID');
+      return;
+    }
+    
+    if (!studentId.trim()) {
+      alert('Please enter your student ID');
+      return;
+    }
+    
+    // Check if exam exists
+    const exams = JSON.parse(localStorage.getItem('zkp_vault_exams') || '[]');
+    const exam = exams.find((e: Exam) => e.examId === examId);
+    
+    if (!exam) {
+      alert(`Exam "${examId}" not found!\n\nPlease check the exam ID or ask your instructor to create it.`);
+      return;
+    }
+    
+    setSelectedExam(exam);
+    setCurrentView('student');
   };
 
   const renderCreateExam = () => (
@@ -141,7 +173,7 @@ const App: React.FC<AppProps> = () => {
 
       <div className="create-exam-container">
         <h1>Create New Exam</h1>
-        <p className="subtitle">Set up a new proctored exam</p>
+        <p className="subtitle">Set up a new proctored exam for students</p>
 
         <div className="form-section">
           <div className="form-group">
@@ -160,7 +192,7 @@ const App: React.FC<AppProps> = () => {
             <input
               type="number"
               value={newExamDuration}
-              onChange={(e) => setNewExamDuration(parseInt(e.target.value))}
+              onChange={(e) => setNewExamDuration(parseInt(e.target.value) || 60)}
               min="1"
               max="300"
             />
@@ -172,15 +204,15 @@ const App: React.FC<AppProps> = () => {
             <input
               type="number"
               value={newExamMinScore}
-              onChange={(e) => setNewExamMinScore(parseInt(e.target.value))}
+              onChange={(e) => setNewExamMinScore(parseInt(e.target.value) || 70)}
               min="0"
               max="100"
             />
             <small>Minimum score required to pass integrity check (0-100)</small>
           </div>
 
-          <button className="create-btn" onClick={handleCreateExam}>
-            Create Exam
+          <button className="action-btn create-btn" onClick={handleCreateExam}>
+            ✓ Create Exam
           </button>
         </div>
 
@@ -232,41 +264,32 @@ const App: React.FC<AppProps> = () => {
             <div className="card-icon">👨‍🎓</div>
             <h3>Take Exam</h3>
             <p>Start your proctored exam with AI monitoring</p>
-
+            
             <div className="form-group">
-              <label>Exam ID</label>
+              <label>Exam ID *</label>
               <input
                 type="text"
                 value={examId}
                 onChange={(e) => setExamId(e.target.value)}
                 placeholder="e.g., CS101_FINAL_2024"
               />
+              <small>Enter the exam ID provided by your instructor</small>
             </div>
-
+            
             <div className="form-group">
-              <label>Student ID</label>
+              <label>Student ID *</label>
               <input
                 type="text"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
                 placeholder="e.g., STU12345"
               />
-            </div>
-
-            <div className="form-group">
-              <label>Duration (minutes)</label>
-              <input
-                type="number"
-                value={examDuration}
-                onChange={(e) => setExamDuration(parseInt(e.target.value))}
-                min="1"
-                max="300"
-              />
+              <small>Your unique student identifier</small>
             </div>
 
             <button
               className="action-btn student-btn"
-              onClick={() => setCurrentView('student')}
+              onClick={handleStartExam}
               disabled={!examId || !studentId}
             >
               Start Exam →
@@ -277,15 +300,16 @@ const App: React.FC<AppProps> = () => {
             <div className="card-icon">👨‍💼</div>
             <h3>Admin Dashboard</h3>
             <p>View student proofs and exam analytics</p>
-
+            
             <div className="form-group">
-              <label>Exam ID to Monitor</label>
+              <label>Exam ID to Monitor *</label>
               <input
                 type="text"
                 value={examId}
                 onChange={(e) => setExamId(e.target.value)}
                 placeholder="e.g., CS101_FINAL_2024"
               />
+              <small>View submissions for this exam</small>
             </div>
 
             <button
@@ -337,31 +361,30 @@ const App: React.FC<AppProps> = () => {
           </div>
         </div>
       </div>
-
-      {APP_ID === 0 && (
-        <div className="warning-banner">
-          ⚠️ Smart contract not deployed yet. Please update APP_ID in App.tsx after deployment.
-        </div>
-      )}
     </div>
   );
 
   const renderStudent = () => (
     <div className="student-view">
       <div className="view-header">
-        <button className="back-btn" onClick={() => setCurrentView('home')}>
+        <button className="back-btn" onClick={() => {
+          setCurrentView('home');
+          setSelectedExam(null);
+        }}>
           ← Back to Home
         </button>
         <button className="disconnect-btn" onClick={handleDisconnectWallet}>
           Disconnect Wallet
         </button>
       </div>
-      <StudentExam
-        examId={examId}
-        studentId={studentId}
-        examDuration={examDuration}
-        onComplete={handleExamComplete}
-      />
+      {selectedExam && (
+        <StudentExam
+          examId={selectedExam.examId}
+          studentId={studentId}
+          examDuration={selectedExam.duration}
+          onComplete={handleExamComplete}
+        />
+      )}
     </div>
   );
 
