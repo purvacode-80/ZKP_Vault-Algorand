@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getExamProofs, getExamMetadata, getExplorerUrl } from './services/algorand-service';
+import { getExplorerUrl } from '../services/algorand-service';
 import './AdminDashboard.css';
 
 interface ProofData {
@@ -7,15 +7,17 @@ interface ProofData {
   trustScore: number;
   proofHash: string;
   timestamp: number;
+  examId: string;
+  incidents: number;
   txId?: string;
 }
 
 interface ExamStats {
   totalSubmissions: number;
   averageTrustScore: number;
-  highIntegrity: number; // Count of scores > 90
-  mediumIntegrity: number; // Count of scores 70-90
-  lowIntegrity: number; // Count of scores < 70
+  highIntegrity: number;
+  mediumIntegrity: number;
+  lowIntegrity: number;
 }
 
 interface AdminDashboardProps {
@@ -33,63 +35,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
     lowIntegrity: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
   useEffect(() => {
     loadProofs();
-  }, [examId, appId]);
+  }, [examId]);
 
-  const loadProofs = async () => {
+  const loadProofs = () => {
     setIsLoading(true);
-    setError(null);
 
     try {
-      // Fetch all proofs for this exam
-      const examProofs = await getExamProofs(examId);
-
-      // Parse proof data
-      const parsedProofs: ProofData[] = examProofs.map((proof: any) => {
-        // TODO: Implement proper ABI decoding
-        // For now, this is a placeholder structure
-        const boxName = proof.boxName;
-        const studentHash = boxName.split('_')[1] || 'unknown';
-
-        return {
-          studentHash: studentHash.substring(0, 16) + '...',
-          trustScore: Math.floor(Math.random() * 40 + 60), // Placeholder
-          proofHash: `0x${Math.random().toString(16).substring(2, 18)}...`,
-          timestamp: Date.now() - Math.random() * 86400000,
-          txId: `TX${Math.random().toString(36).substring(2, 15)}`,
-        };
-      });
-
-      setProofs(parsedProofs);
-      calculateStats(parsedProofs);
+      // Load proofs from localStorage
+      const allProofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
+      
+      // Filter by exam ID
+      const examProofs = allProofs.filter((p: any) => p.examId === examId);
+      
+      setProofs(examProofs);
+      calculateStats(examProofs);
     } catch (err) {
       console.error('Failed to load proofs:', err);
-      setError('Failed to load exam data. Please check the exam ID and try again.');
-
-      // Load mock data for demo
-      loadMockData();
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const loadMockData = () => {
-    // Generate mock data for demonstration
-    const mockProofs: ProofData[] = Array.from({ length: 15 }, (_, i) => ({
-      studentHash: `0x${Math.random().toString(16).substring(2, 18)}...`,
-      trustScore: Math.floor(Math.random() * 40 + 60),
-      proofHash: `0x${Math.random().toString(16).substring(2, 18)}...`,
-      timestamp: Date.now() - Math.random() * 86400000,
-      txId: `TX${Math.random().toString(36).substring(2, 15)}`,
-    }));
-
-    setProofs(mockProofs);
-    calculateStats(mockProofs);
   };
 
   const calculateStats = (proofList: ProofData[]) => {
@@ -134,12 +103,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
 
   const exportReport = () => {
     const csvContent = [
-      ['Student Hash', 'Trust Score', 'Proof Hash', 'Timestamp', 'Status'].join(','),
+      ['Student Hash', 'Trust Score', 'Proof Hash', 'Timestamp', 'Incidents', 'Status'].join(','),
       ...proofs.map(p => [
         p.studentHash,
         p.trustScore,
         p.proofHash,
         new Date(p.timestamp).toISOString(),
+        p.incidents || 0,
         getStatusBadge(p.trustScore).label,
       ].join(',')),
     ].join('\n');
@@ -152,6 +122,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
     a.click();
   };
 
+  const clearAllProofs = () => {
+    if (confirm('Are you sure you want to clear all proofs? This cannot be undone.')) {
+      const allProofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
+      const otherProofs = allProofs.filter((p: any) => p.examId !== examId);
+      localStorage.setItem('zkp_vault_proofs', JSON.stringify(otherProofs));
+      loadProofs();
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <div className="dashboard-header">
@@ -161,9 +140,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
             Exam: <strong>{examId}</strong> | Date: {new Date().toLocaleDateString()}
           </p>
         </div>
-        <button className="export-button" onClick={exportReport}>
-          📊 Export Report
-        </button>
+        <div className="header-actions">
+          <button className="export-button" onClick={exportReport}>
+            📊 Export Report
+          </button>
+          <button className="clear-button" onClick={clearAllProofs}>
+            🗑️ Clear Proofs
+          </button>
+        </div>
       </div>
 
       {/* Statistics Section */}
@@ -254,25 +238,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         {isLoading ? (
           <div className="loading-state">
             <div className="spinner"></div>
-            <p>Loading proofs from blockchain...</p>
-          </div>
-        ) : error ? (
-          <div className="error-state">
-            <p>{error}</p>
-            <button onClick={loadProofs}>Retry</button>
+            <p>Loading proofs...</p>
           </div>
         ) : filteredProofs.length === 0 ? (
           <div className="empty-state">
-            <p>No proofs found</p>
+            <p>No proofs found{stats.totalSubmissions > 0 ? ' matching your filter' : ' for this exam'}</p>
           </div>
         ) : (
           <div className="proofs-table">
             <div className="table-header">
               <div className="col-hash">Student Hash</div>
               <div className="col-score">Trust Score</div>
+              <div className="col-incidents">Incidents</div>
               <div className="col-status">Status</div>
               <div className="col-time">Timestamp</div>
-              <div className="col-blockchain">Blockchain</div>
+              <div className="col-blockchain">Proof Hash</div>
             </div>
 
             {filteredProofs.map((proof, index) => {
@@ -280,7 +260,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
               return (
                 <div key={index} className="table-row">
                   <div className="col-hash">
-                    <code>{proof.studentHash}</code>
+                    <code>{proof.studentHash.substring(0, 16)}...</code>
                   </div>
                   <div className="col-score">
                     <div className="score-badge" style={{
@@ -288,6 +268,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
                     }}>
                       {proof.trustScore}
                     </div>
+                  </div>
+                  <div className="col-incidents">
+                    {proof.incidents || 0}
                   </div>
                   <div className="col-status">
                     <span className={`status-badge ${status.className}`}>
@@ -298,14 +281,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
                     {new Date(proof.timestamp).toLocaleString()}
                   </div>
                   <div className="col-blockchain">
-                    <a
-                      href={getExplorerUrl(proof.txId || '', 'testnet')}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="explorer-link"
-                    >
-                      View on Explorer →
-                    </a>
+                    <code className="proof-hash-mini">{proof.proofHash.substring(0, 12)}...</code>
                   </div>
                 </div>
               );
@@ -321,8 +297,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
           <h3>Privacy Protection Active</h3>
           <p>
             No video data is stored or accessible. Only cryptographic proofs and trust scores
-            are recorded on the Algorand blockchain. Student identities are hashed and cannot
-            be reverse-engineered.
+            are recorded. Student identities are hashed and cannot be reverse-engineered.
           </p>
         </div>
       </div>

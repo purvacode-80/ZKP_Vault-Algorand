@@ -2,27 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { PeraWalletConnect } from '@perawallet/connect';
 import { StudentExam } from './components/StudentExam';
 import { AdminDashboard } from './components/AdminDashboard';
-import { setAppId } from './components/services/algorand-service';
+import { setAppId, submitProofToBlockchain, getExplorerUrl } from './services/algorand-service';
 import './App.css';
 
 // Initialize Pera Wallet
 const peraWallet = new PeraWalletConnect();
 
-// Algorand App ID (replace with your deployed contract ID)
-const APP_ID : number = 755317770; // TODO: Replace with actual App ID after deployment
+// Algorand App ID
+const APP_ID = 755317770; // Your deployed App ID
 
 interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   const [accountAddress, setAccountAddress] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'student' | 'admin'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'student' | 'admin' | 'create-exam'>('home');
   const [examId, setExamId] = useState('');
   const [studentId, setStudentId] = useState('');
   const [examDuration, setExamDuration] = useState(60);
+  
+  // Create exam form
+  const [newExamId, setNewExamId] = useState('');
+  const [newExamDuration, setNewExamDuration] = useState(60);
+  const [newExamMinScore, setNewExamMinScore] = useState(70);
 
   useEffect(() => {
-    // Set the App ID for Algorand service
     setAppId(APP_ID);
 
     // Reconnect to previous session if exists
@@ -65,11 +69,133 @@ const App: React.FC<AppProps> = () => {
     }
   };
 
-  const handleExamComplete = (sessionData: any) => {
+  const handleExamComplete = async (sessionData: any) => {
     console.log('📊 Exam completed:', sessionData);
-    alert(`Exam completed! Trust Score: ${sessionData.trustScore}\nProof Hash: ${sessionData.proofHash}`);
+    
+    // Save to localStorage for demo
+    const proofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
+    proofs.push({
+      examId: sessionData.examId,
+      studentHash: sessionData.studentHash,
+      trustScore: sessionData.trustScore,
+      proofHash: sessionData.proofHash,
+      timestamp: sessionData.endTime || Date.now(),
+      incidents: sessionData.incidents.length,
+    });
+    localStorage.setItem('zkp_vault_proofs', JSON.stringify(proofs));
+    
+    // Try to submit to blockchain
+    try {
+      if (accountAddress) {
+        const txId = await submitProofToBlockchain(sessionData, accountAddress, signTransactions);
+        const explorerUrl = getExplorerUrl(txId);
+        
+        alert(`✅ Exam completed!\n\nTrust Score: ${sessionData.trustScore}\nProof Hash: ${sessionData.proofHash}\n\nView on Algorand Explorer:\n${explorerUrl}`);
+      } else {
+        alert(`✅ Exam completed locally!\n\nTrust Score: ${sessionData.trustScore}\nIncidents: ${sessionData.incidents.length}\n\n(Connect wallet to submit to blockchain)`);
+      }
+    } catch (error) {
+      console.error('Blockchain submission error:', error);
+      alert(`✅ Exam completed and saved locally!\n\nTrust Score: ${sessionData.trustScore}\n\n(Blockchain submission failed, but proof is saved)`);
+    }
+    
     setCurrentView('home');
   };
+
+  const handleCreateExam = () => {
+    if (!newExamId) {
+      alert('Please enter an exam ID');
+      return;
+    }
+    
+    // Save exam to localStorage
+    const exams = JSON.parse(localStorage.getItem('zkp_vault_exams') || '[]');
+    exams.push({
+      examId: newExamId,
+      duration: newExamDuration,
+      minTrustScore: newExamMinScore,
+      createdAt: Date.now(),
+      createdBy: accountAddress || 'unknown',
+    });
+    localStorage.setItem('zkp_vault_exams', JSON.stringify(exams));
+    
+    alert(`✅ Exam "${newExamId}" created successfully!`);
+    
+    // Reset form
+    setNewExamId('');
+    setNewExamDuration(60);
+    setNewExamMinScore(70);
+    setCurrentView('home');
+  };
+
+  const renderCreateExam = () => (
+    <div className="create-exam-view">
+      <div className="view-header">
+        <button className="back-btn" onClick={() => setCurrentView('home')}>
+          ← Back to Home
+        </button>
+        <button className="disconnect-btn" onClick={handleDisconnectWallet}>
+          Disconnect Wallet
+        </button>
+      </div>
+
+      <div className="create-exam-container">
+        <h1>Create New Exam</h1>
+        <p className="subtitle">Set up a new proctored exam</p>
+
+        <div className="form-section">
+          <div className="form-group">
+            <label>Exam ID *</label>
+            <input
+              type="text"
+              value={newExamId}
+              onChange={(e) => setNewExamId(e.target.value)}
+              placeholder="e.g., CS101_FINAL_2024"
+            />
+            <small>Use a unique identifier for this exam</small>
+          </div>
+
+          <div className="form-group">
+            <label>Duration (minutes) *</label>
+            <input
+              type="number"
+              value={newExamDuration}
+              onChange={(e) => setNewExamDuration(parseInt(e.target.value))}
+              min="1"
+              max="300"
+            />
+            <small>How long students have to complete the exam</small>
+          </div>
+
+          <div className="form-group">
+            <label>Minimum Trust Score *</label>
+            <input
+              type="number"
+              value={newExamMinScore}
+              onChange={(e) => setNewExamMinScore(parseInt(e.target.value))}
+              min="0"
+              max="100"
+            />
+            <small>Minimum score required to pass integrity check (0-100)</small>
+          </div>
+
+          <button className="create-btn" onClick={handleCreateExam}>
+            Create Exam
+          </button>
+        </div>
+
+        <div className="info-box">
+          <h3>ℹ️ How It Works</h3>
+          <ul>
+            <li>Students use the Exam ID to start their proctored exam</li>
+            <li>AI monitors in real-time for integrity violations</li>
+            <li>Trust scores are calculated based on detected incidents</li>
+            <li>Proofs are submitted to Algorand blockchain</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderHome = () => (
     <div className="home-view">
@@ -106,7 +232,7 @@ const App: React.FC<AppProps> = () => {
             <div className="card-icon">👨‍🎓</div>
             <h3>Take Exam</h3>
             <p>Start your proctored exam with AI monitoring</p>
-
+            
             <div className="form-group">
               <label>Exam ID</label>
               <input
@@ -116,7 +242,7 @@ const App: React.FC<AppProps> = () => {
                 placeholder="e.g., CS101_FINAL_2024"
               />
             </div>
-
+            
             <div className="form-group">
               <label>Student ID</label>
               <input
@@ -126,7 +252,7 @@ const App: React.FC<AppProps> = () => {
                 placeholder="e.g., STU12345"
               />
             </div>
-
+            
             <div className="form-group">
               <label>Duration (minutes)</label>
               <input
@@ -151,7 +277,7 @@ const App: React.FC<AppProps> = () => {
             <div className="card-icon">👨‍💼</div>
             <h3>Admin Dashboard</h3>
             <p>View student proofs and exam analytics</p>
-
+            
             <div className="form-group">
               <label>Exam ID to Monitor</label>
               <input
@@ -168,6 +294,19 @@ const App: React.FC<AppProps> = () => {
               disabled={!examId}
             >
               Open Dashboard →
+            </button>
+          </div>
+
+          <div className="action-card">
+            <div className="card-icon">➕</div>
+            <h3>Create Exam</h3>
+            <p>Set up a new proctored exam for students</p>
+
+            <button
+              className="action-btn create-btn"
+              onClick={() => setCurrentView('create-exam')}
+            >
+              Create New Exam →
             </button>
           </div>
         </div>
@@ -245,6 +384,7 @@ const App: React.FC<AppProps> = () => {
       {currentView === 'home' && renderHome()}
       {currentView === 'student' && renderStudent()}
       {currentView === 'admin' && renderAdmin()}
+      {currentView === 'create-exam' && renderCreateExam()}
     </div>
   );
 };
