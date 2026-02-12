@@ -223,6 +223,46 @@ export const StudentExam: React.FC<StudentExamProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const detectFrame = async () => {
+  if (!videoRef.current || !isProctoring) return;
+
+  try {
+    // 1. Analyze current frame
+    const detection = await aiProctor.analyzeFrame(videoRef.current);
+    setCurrentDetection(detection);
+
+    // 2. Store detection
+    setDetections(prev => [...prev, detection]);
+
+    // 3. FIX: Check for incidents and update score correctly
+    // We pass the current 'incidents' state to get the updated list
+    const updatedIncidents = aiProctor.checkForIncidents(detection, incidents);
+
+    // Only update state if a new incident was actually added
+    if (updatedIncidents.length > incidents.length) {
+      setIncidents(updatedIncidents);
+      console.log("New incident detected!", updatedIncidents);
+    }
+
+    // 4. FIX: Calculate trust score using the UPDATED list
+    // This ensures that even before the state re-renders, the score
+    // accounts for the incident that just happened.
+    const score = aiProctor.calculateTrustScore({
+      incidents: updatedIncidents,
+    });
+
+    setTrustScore(score);
+
+    // 5. Draw detection overlays
+    drawOverlays(detection);
+
+    // 6. Continue detection loop
+    animationFrameRef.current = requestAnimationFrame(detectFrame);
+    } catch (error) {
+      console.error('Detection error:', error);
+    }
+};
+
   return (
     <div className="student-exam">
       <div className="exam-header">

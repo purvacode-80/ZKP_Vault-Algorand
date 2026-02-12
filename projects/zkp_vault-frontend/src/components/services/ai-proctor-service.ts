@@ -223,10 +223,58 @@ export class AIProctorService {
    * Check detection result and log incidents
    */
   checkForIncidents(
-    detection: DetectionResult,
-    incidents: IncidentLog[]
+  detection: DetectionResult,
+  incidents: IncidentLog[]
   ): IncidentLog[] {
     const newIncidents: IncidentLog[] = [...incidents];
+    const lastIncident = incidents.length > 0 ? incidents[incidents.length - 1] : null;
+
+    // Helper to check if enough time has passed (e.g., 3 seconds)
+    const COOLDOWN = 3000;
+    const canLog = (type: string) => {
+      const lastOfThisType = [...incidents].reverse().find(i => i.type === type);
+      return !lastOfThisType || (Date.now() - lastOfThisType.timestamp > COOLDOWN);
+    };
+
+    // No face detected - ONLY log if canLog returns true
+    if (detection.faceCount === 0 && canLog('no_face')) {
+      newIncidents.push({
+        type: 'no_face',
+        timestamp: detection.timestamp,
+        details: 'No face detected in frame',
+      });
+    }
+
+    // Multiple faces detected
+    if (detection.faceCount > 1 && canLog('multi_face')) {
+      newIncidents.push({
+        type: 'multi_face',
+        timestamp: detection.timestamp,
+        details: `${detection.faceCount} faces detected`,
+      });
+    }
+
+    // Phone detected
+    if (detection.phoneDetected && canLog('phone_detected')) {
+      newIncidents.push({
+        type: 'phone_detected',
+        timestamp: detection.timestamp,
+        details: 'Mobile device detected in frame',
+      });
+    }
+
+    // Looking away - already has a threshold (this.LOOKING_AWAY_THRESHOLD)
+    if (!detection.isLookingAtScreen && this.consecutiveLookingAway > this.LOOKING_AWAY_THRESHOLD) {
+      newIncidents.push({
+        type: 'looking_away',
+        timestamp: detection.timestamp,
+        details: 'Excessive looking away detected',
+      });
+      this.consecutiveLookingAway = 0;
+    }
+
+    return newIncidents;
+  }
 
     // No face detected
     if (detection.faceCount === 0) {
@@ -279,7 +327,6 @@ export class AIProctorService {
     this.isInitialized = false;
     console.log('🧹 AI Proctor disposed');
   }
-}
 
 // Export singleton instance
 export const aiProctor = new AIProctorService();
