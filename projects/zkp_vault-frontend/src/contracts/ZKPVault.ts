@@ -24,7 +24,7 @@ import { SendParams, SendSingleTransactionResult, SendAtomicTransactionComposerR
 import { Address, encodeAddress, modelsv2, OnApplicationComplete, Transaction, TransactionSigner } from 'algosdk'
 import SimulateResponse = modelsv2.SimulateResponse
 
-export const APP_SPEC: Arc56Contract = {"name":"ZKPVault","structs":{},"methods":[{"name":"create_application","args":[],"returns":{"type":"void"},"actions":{"create":["NoOp"],"call":[]},"readonly":false,"desc":"Initialize the contract","events":[],"recommendations":{}},{"name":"submit_proof","args":[{"type":"string","name":"exam_id","desc":"The exam identifier"},{"type":"string","name":"student_hash","desc":"Hashed student identity"},{"type":"uint64","name":"trust_score","desc":"Final trust score (0-100)"},{"type":"string","name":"proof_hash","desc":"SHA-256 hash of the proof data"}],"returns":{"type":"string","desc":"Success message with transaction details"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"desc":"Submit exam proof for a student","events":[],"recommendations":{}},{"name":"verify_submission","args":[{"type":"string","name":"exam_id","desc":"The exam identifier"},{"type":"string","name":"student_hash","desc":"Hashed student identity"},{"type":"uint64","name":"trust_score","desc":"Final trust score (0-100)"},{"type":"string","name":"proof_hash","desc":"SHA-256 hash of the proof data"}],"returns":{"type":"bool","desc":"True if valid"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"desc":"Verify that a proof submission is valid","events":[],"recommendations":{}},{"name":"get_contract_info","args":[],"returns":{"type":"string","desc":"Contract name and version"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"desc":"Get contract information","events":[],"recommendations":{}}],"arcs":[22,28],"desc":"\n    ZKP-Vault Smart Contract\n    Privacy-preserving AI proctoring on Algorand\n    \n    Simplified version using global state for demo purposes\n    ","networks":{},"state":{"schema":{"global":{"ints":0,"bytes":0},"local":{"ints":0,"bytes":0}},"keys":{"global":{},"local":{},"box":{}},"maps":{"global":{},"local":{},"box":{}}},"bareActions":{"create":[],"call":[]},"sourceInfo":{"approval":{"sourceInfo":[{"pc":[169],"errorMessage":"Trust score cannot exceed 100"},{"pc":[126,138,158,214,226,246],"errorMessage":"invalid array length header"},{"pc":[132,144,164,220,232,252],"errorMessage":"invalid number of bytes for arc4.dynamic_array<arc4.uint8>"},{"pc":[152,240],"errorMessage":"invalid number of bytes for arc4.uint64"}],"pcOffsetMethod":"none"},"clear":{"sourceInfo":[],"pcOffsetMethod":"none"}},"source":{"approval":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAwIDIgMSA4CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjExCiAgICAvLyBjbGFzcyBaS1BWYXVsdChBUkM0Q29udHJhY3QpOgogICAgdHhuIE9uQ29tcGxldGlvbgogICAgIQogICAgYXNzZXJ0CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYnogbWFpbl9jcmVhdGVfTm9PcEA3CiAgICBwdXNoYnl0ZXNzIDB4YTg4ZWI0OTAgMHhkOGJkOTM5ZiAweDJlZWViYmI5IC8vIG1ldGhvZCAic3VibWl0X3Byb29mKHN0cmluZyxzdHJpbmcsdWludDY0LHN0cmluZylzdHJpbmciLCBtZXRob2QgInZlcmlmeV9zdWJtaXNzaW9uKHN0cmluZyxzdHJpbmcsdWludDY0LHN0cmluZylib29sIiwgbWV0aG9kICJnZXRfY29udHJhY3RfaW5mbygpc3RyaW5nIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggc3VibWl0X3Byb29mIHZlcmlmeV9zdWJtaXNzaW9uIG1haW5fZ2V0X2NvbnRyYWN0X2luZm9fcm91dGVANQogICAgZXJyCgptYWluX2dldF9jb250cmFjdF9pbmZvX3JvdXRlQDU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjgyCiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAzMTVhNGI1MDJkNTY2MTc1NmM3NDIwNzYzMTJlMzAyMDJkMjA1MDcyNjk3NjYxNjM3OTJkNTA3MjY1NzM2NTcyNzY2OTZlNjcyMDQxNDkyMDUwNzI2ZjYzNzQ2ZjcyNjk2ZTY3CiAgICBsb2cKICAgIGludGNfMiAvLyAxCiAgICByZXR1cm4KCm1haW5fY3JlYXRlX05vT3BANzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6MTEKICAgIC8vIGNsYXNzIFpLUFZhdWx0KEFSQzRDb250cmFjdCk6CiAgICBwdXNoYnl0ZXMgMHg3NTJjM2FjMCAvLyBtZXRob2QgImNyZWF0ZV9hcHBsaWNhdGlvbigpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fY3JlYXRlX2FwcGxpY2F0aW9uX3JvdXRlQDgKICAgIGVycgoKbWFpbl9jcmVhdGVfYXBwbGljYXRpb25fcm91dGVAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6MTkKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChjcmVhdGU9InJlcXVpcmUiKQogICAgaW50Y18yIC8vIDEKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy56a3BfdmF1bHQuY29udHJhY3QuWktQVmF1bHQuc3VibWl0X3Byb29mW3JvdXRpbmddKCkgLT4gdm9pZDoKc3VibWl0X3Byb29mOgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weToyNAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzEgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIGR1cAogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMSAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwogICAgZHVwCiAgICBsZW4KICAgIGludGNfMyAvLyA4CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LnVpbnQ2NAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNAogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18xIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjQ0LTQ1CiAgICAvLyAjIFZlcmlmeSB0cnVzdCBzY29yZSBpcyB2YWxpZCAoMC0xMDApCiAgICAvLyBhc3NlcnQgdHJ1c3Rfc2NvcmUubmF0aXZlIDw9IFVJbnQ2NCgxMDApLCAiVHJ1c3Qgc2NvcmUgY2Fubm90IGV4Y2VlZCAxMDAiCiAgICBidG9pCiAgICBwdXNoaW50IDEwMAogICAgPD0KICAgIGFzc2VydCAvLyBUcnVzdCBzY29yZSBjYW5ub3QgZXhjZWVkIDEwMAogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weToyNAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMWM1MDcyNmY2ZjY2MjA3Mzc1NjI2ZDY5NzQ3NDY1NjQyMDczNzU2MzYzNjU3MzczNjY3NTZjNmM3OQogICAgbG9nCiAgICBpbnRjXzIgLy8gMQogICAgcmV0dXJuCgoKLy8gc21hcnRfY29udHJhY3RzLnprcF92YXVsdC5jb250cmFjdC5aS1BWYXVsdC52ZXJpZnlfc3VibWlzc2lvbltyb3V0aW5nXSgpIC0+IHZvaWQ6CnZlcmlmeV9zdWJtaXNzaW9uOgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weTo1NAogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzEgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDIKICAgIGR1cAogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMSAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMwogICAgZHVwCiAgICBsZW4KICAgIGludGNfMyAvLyA4CiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LnVpbnQ2NAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNAogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18xIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5Ojc2CiAgICAvLyB0cnVzdF9zY29yZS5uYXRpdmUgPD0gVUludDY0KDEwMCkgYW5kCiAgICBidG9pCiAgICBwdXNoaW50IDEwMAogICAgPD0KICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6NzYtNzcKICAgIC8vIHRydXN0X3Njb3JlLm5hdGl2ZSA8PSBVSW50NjQoMTAwKSBhbmQKICAgIC8vIHRydXN0X3Njb3JlLm5hdGl2ZSA+PSBVSW50NjQoMCkKICAgIGJ6IHZlcmlmeV9zdWJtaXNzaW9uX2Jvb2xfZmFsc2VANAogICAgaW50Y18yIC8vIDEKCnZlcmlmeV9zdWJtaXNzaW9uX2Jvb2xfbWVyZ2VANToKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6ODAKICAgIC8vIHJldHVybiBhcmM0LkJvb2woaXNfdmFsaWQpCiAgICBwdXNoYnl0ZXMgMHgwMAogICAgaW50Y18wIC8vIDAKICAgIHVuY292ZXIgMgogICAgc2V0Yml0CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjU0CiAgICAvLyBAYXJjNC5hYmltZXRob2QKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18yIC8vIDEKICAgIHJldHVybgoKdmVyaWZ5X3N1Ym1pc3Npb25fYm9vbF9mYWxzZUA0OgogICAgaW50Y18wIC8vIDAKICAgIGIgdmVyaWZ5X3N1Ym1pc3Npb25fYm9vbF9tZXJnZUA1Cg==","clear":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="},"byteCode":{"approval":"CyAEAAIBCDEZFEQxGEEAWYIDBKiOtJAE2L2TnwQu7ru5NhoAjgMATQClAAEAgDcVH3x1ADFaS1AtVmF1bHQgdjEuMCAtIFByaXZhY3ktUHJlc2VydmluZyBBSSBQcm9jdG9yaW5nsCRDgAR1LDrANhoAjgEAAQAkQzYaAUkiWSMITBUSRDYaAkkiWSMITBUSRDYaA0kVJRJENhoESSJZIwhMFRJEF4FkDkSAIhUffHUAHFByb29mIHN1Ym1pdHRlZCBzdWNjZXNzZnVsbHmwJEM2GgFJIlkjCEwVEkQ2GgJJIlkjCEwVEkQ2GgNJFSUSRDYaBEkiWSMITBUSRBeBZA5BABMkgAEAIk8CVIAEFR98dUxQsCRDIkL/6g==","clear":"C4EBQw=="},"compilerInfo":{"compiler":"puya","compilerVersion":{"major":5,"minor":7,"patch":1}},"events":[],"templateVariables":{}} as unknown as Arc56Contract
+export const APP_SPEC: Arc56Contract = {"name":"ZkpVault","structs":{},"methods":[{"name":"create_application","args":[],"returns":{"type":"void"},"actions":{"create":["NoOp"],"call":[]},"readonly":false,"desc":"Initialize the contract","events":[],"recommendations":{}},{"name":"hello","args":[{"type":"string","name":"name"}],"returns":{"type":"string"},"actions":{"create":["NoOp"],"call":["NoOp"]},"readonly":false,"events":[],"recommendations":{}},{"name":"submit_proof","args":[{"type":"string","name":"exam_id","desc":"The exam identifier"},{"type":"string","name":"student_hash","desc":"Hashed student identity"},{"type":"uint64","name":"trust_score","desc":"Final trust score (0-100)"},{"type":"string","name":"proof_hash","desc":"SHA-256 hash of the proof data"}],"returns":{"type":"string","desc":"Success message with transaction details"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"desc":"Submit exam proof for a student","events":[],"recommendations":{}},{"name":"verify_submission","args":[{"type":"string","name":"exam_id","desc":"The exam identifier"},{"type":"string","name":"student_hash","desc":"Hashed student identity"},{"type":"uint64","name":"trust_score","desc":"Final trust score (0-100)"},{"type":"string","name":"proof_hash","desc":"SHA-256 hash of the proof data"}],"returns":{"type":"bool","desc":"True if valid"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"desc":"Verify that a proof submission is valid","events":[],"recommendations":{}},{"name":"get_contract_info","args":[],"returns":{"type":"string","desc":"Contract name and version"},"actions":{"create":[],"call":["NoOp"]},"readonly":false,"desc":"Get contract information","events":[],"recommendations":{}}],"arcs":[22,28],"desc":"\n    ZKP-Vault Smart Contract\n    Privacy-preserving AI proctoring on Algorand\n\n    Simplified version using global state for demo purposes\n    ","networks":{},"state":{"schema":{"global":{"ints":0,"bytes":0},"local":{"ints":0,"bytes":0}},"keys":{"global":{},"local":{},"box":{}},"maps":{"global":{},"local":{},"box":{}}},"bareActions":{"create":[],"call":[]},"sourceInfo":{"approval":{"sourceInfo":[{"pc":[235],"errorMessage":"Trust score cannot exceed 100"},{"pc":[146,192,204,224,280,292,312],"errorMessage":"invalid array length header"},{"pc":[153,198,210,230,286,298,318],"errorMessage":"invalid number of bytes for arc4.dynamic_array<arc4.uint8>"},{"pc":[218,306],"errorMessage":"invalid number of bytes for arc4.uint64"},{"pc":[169],"errorMessage":"max array length exceeded"}],"pcOffsetMethod":"none"},"clear":{"sourceInfo":[],"pcOffsetMethod":"none"}},"source":{"approval":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAwIDIgMSA4CiAgICBieXRlY2Jsb2NrIDB4MTUxZjdjNzUKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgWmtwVmF1bHQoQVJDNENvbnRyYWN0KToKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydAogICAgcHVzaGJ5dGVzIDB4MDJiZWNlMTEgLy8gbWV0aG9kICJoZWxsbyhzdHJpbmcpc3RyaW5nIgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMAogICAgbWF0Y2ggaGVsbG8KCm1haW5fc3dpdGNoX2Nhc2VfbmV4dEAzOgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weTo0CiAgICAvLyBjbGFzcyBaa3BWYXVsdChBUkM0Q29udHJhY3QpOgogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJ6IG1haW5fY3JlYXRlX05vT3BAOQogICAgcHVzaGJ5dGVzcyAweGE4OGViNDkwIDB4ZDhiZDkzOWYgMHgyZWVlYmJiOSAvLyBtZXRob2QgInN1Ym1pdF9wcm9vZihzdHJpbmcsc3RyaW5nLHVpbnQ2NCxzdHJpbmcpc3RyaW5nIiwgbWV0aG9kICJ2ZXJpZnlfc3VibWlzc2lvbihzdHJpbmcsc3RyaW5nLHVpbnQ2NCxzdHJpbmcpYm9vbCIsIG1ldGhvZCAiZ2V0X2NvbnRyYWN0X2luZm8oKXN0cmluZyIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIHN1Ym1pdF9wcm9vZiB2ZXJpZnlfc3VibWlzc2lvbiBtYWluX2dldF9jb250cmFjdF9pbmZvX3JvdXRlQDcKICAgIGVycgoKbWFpbl9nZXRfY29udHJhY3RfaW5mb19yb3V0ZUA3OgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weTo3NgogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NTAwMzE1YTRiNTAyZDU2NjE3NTZjNzQyMDc2MzEyZTMwMjAyZDIwNTA3MjY5NzY2MTYzNzkyZDUwNzI2NTczNjU3Mjc2Njk2ZTY3MjA0MTQ5MjA1MDcyNmY2Mzc0NmY3MjY5NmU2NwogICAgbG9nCiAgICBpbnRjXzIgLy8gMQogICAgcmV0dXJuCgptYWluX2NyZWF0ZV9Ob09wQDk6CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5OjQKICAgIC8vIGNsYXNzIFprcFZhdWx0KEFSQzRDb250cmFjdCk6CiAgICBwdXNoYnl0ZXMgMHg3NTJjM2FjMCAvLyBtZXRob2QgImNyZWF0ZV9hcHBsaWNhdGlvbigpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fY3JlYXRlX2FwcGxpY2F0aW9uX3JvdXRlQDEwCiAgICBlcnIKCm1haW5fY3JlYXRlX2FwcGxpY2F0aW9uX3JvdXRlQDEwOgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weToxMgogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGNyZWF0ZT0icmVxdWlyZSIpCiAgICBpbnRjXzIgLy8gMQogICAgcmV0dXJuCgoKLy8gc21hcnRfY29udHJhY3RzLnprcF92YXVsdC5jb250cmFjdC5aa3BWYXVsdC5oZWxsb1tyb3V0aW5nXSgpIC0+IHZvaWQ6CmhlbGxvOgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weToxNwogICAgLy8gQGFyYzQuYWJpbWV0aG9kKGNyZWF0ZT0iYWxsb3ciKQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18xIC8vIDIKICAgICsKICAgIGRpZyAxCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weToxOQogICAgLy8gcmV0dXJuIGFyYzQuU3RyaW5nKCJIZWxsbywgIikgKyBuYW1lCiAgICBleHRyYWN0IDIgMAogICAgcHVzaGJ5dGVzIDB4MDAwNzQ4NjU2YzZjNmYyYzIwCiAgICBzd2FwCiAgICBjb25jYXQgLy8gb24gZXJyb3I6IG1heCBhcnJheSBsZW5ndGggZXhjZWVkZWQKICAgIGR1cAogICAgZXh0cmFjdCAyIDAKICAgIGxlbgogICAgaXRvYgogICAgZXh0cmFjdCA2IDIKICAgIHJlcGxhY2UyIDAKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6MTcKICAgIC8vIEBhcmM0LmFiaW1ldGhvZChjcmVhdGU9ImFsbG93IikKICAgIGJ5dGVjXzAgLy8gMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMiAvLyAxCiAgICByZXR1cm4KCgovLyBzbWFydF9jb250cmFjdHMuemtwX3ZhdWx0LmNvbnRyYWN0LlprcFZhdWx0LnN1Ym1pdF9wcm9vZltyb3V0aW5nXSgpIC0+IHZvaWQ6CnN1Ym1pdF9wcm9vZjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6MjEKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18xIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAyCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzEgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDMKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzMgLy8gOAogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC51aW50NjQKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDQKICAgIGR1cAogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMSAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weTo0MS00MgogICAgLy8gIyBWZXJpZnkgdHJ1c3Qgc2NvcmUgaXMgdmFsaWQgKDAtMTAwKQogICAgLy8gYXNzZXJ0IHRydXN0X3Njb3JlLm5hdGl2ZSA8PSBVSW50NjQoMTAwKSwgIlRydXN0IHNjb3JlIGNhbm5vdCBleGNlZWQgMTAwIgogICAgYnRvaQogICAgcHVzaGludCAxMDAKICAgIDw9CiAgICBhc3NlcnQgLy8gVHJ1c3Qgc2NvcmUgY2Fubm90IGV4Y2VlZCAxMDAKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6MjEKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgcHVzaGJ5dGVzIDB4MTUxZjdjNzUwMDFjNTA3MjZmNmY2NjIwNzM3NTYyNmQ2OTc0NzQ2NTY0MjA3Mzc1NjM2MzY1NzM3MzY2NzU2YzZjNzkKICAgIGxvZwogICAgaW50Y18yIC8vIDEKICAgIHJldHVybgoKCi8vIHNtYXJ0X2NvbnRyYWN0cy56a3BfdmF1bHQuY29udHJhY3QuWmtwVmF1bHQudmVyaWZ5X3N1Ym1pc3Npb25bcm91dGluZ10oKSAtPiB2b2lkOgp2ZXJpZnlfc3VibWlzc2lvbjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy96a3BfdmF1bHQvY29udHJhY3QucHk6NTEKICAgIC8vIEBhcmM0LmFiaW1ldGhvZAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBpbnRjXzAgLy8gMAogICAgZXh0cmFjdF91aW50MTYgLy8gb24gZXJyb3I6IGludmFsaWQgYXJyYXkgbGVuZ3RoIGhlYWRlcgogICAgaW50Y18xIC8vIDIKICAgICsKICAgIHN3YXAKICAgIGxlbgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5keW5hbWljX2FycmF5PGFyYzQudWludDg+CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAyCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBpbnRjXzEgLy8gMgogICAgKwogICAgc3dhcAogICAgbGVuCiAgICA9PQogICAgYXNzZXJ0IC8vIGludmFsaWQgbnVtYmVyIG9mIGJ5dGVzIGZvciBhcmM0LmR5bmFtaWNfYXJyYXk8YXJjNC51aW50OD4KICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDMKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzMgLy8gOAogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC51aW50NjQKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDQKICAgIGR1cAogICAgaW50Y18wIC8vIDAKICAgIGV4dHJhY3RfdWludDE2IC8vIG9uIGVycm9yOiBpbnZhbGlkIGFycmF5IGxlbmd0aCBoZWFkZXIKICAgIGludGNfMSAvLyAyCiAgICArCiAgICBzd2FwCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weTo3MS03MgogICAgLy8gIyBCYXNpYyB2YWxpZGF0aW9uCiAgICAvLyBpc192YWxpZCA9IHRydXN0X3Njb3JlLm5hdGl2ZSA8PSBVSW50NjQoMTAwKSBhbmQgdHJ1c3Rfc2NvcmUubmF0aXZlID49IFVJbnQ2NCgwKQogICAgYnRvaQogICAgcHVzaGludCAxMDAKICAgIDw9CiAgICBieiB2ZXJpZnlfc3VibWlzc2lvbl9ib29sX2ZhbHNlQDQKICAgIGludGNfMiAvLyAxCgp2ZXJpZnlfc3VibWlzc2lvbl9ib29sX21lcmdlQDU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvemtwX3ZhdWx0L2NvbnRyYWN0LnB5Ojc0CiAgICAvLyByZXR1cm4gYXJjNC5Cb29sKGlzX3ZhbGlkKQogICAgcHVzaGJ5dGVzIDB4MDAKICAgIGludGNfMCAvLyAwCiAgICB1bmNvdmVyIDIKICAgIHNldGJpdAogICAgLy8gc21hcnRfY29udHJhY3RzL3prcF92YXVsdC9jb250cmFjdC5weTo1MQogICAgLy8gQGFyYzQuYWJpbWV0aG9kCiAgICBieXRlY18wIC8vIDB4MTUxZjdjNzUKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzIgLy8gMQogICAgcmV0dXJuCgp2ZXJpZnlfc3VibWlzc2lvbl9ib29sX2ZhbHNlQDQ6CiAgICBpbnRjXzAgLy8gMAogICAgYiB2ZXJpZnlfc3VibWlzc2lvbl9ib29sX21lcmdlQDUK","clear":"I3ByYWdtYSB2ZXJzaW9uIDExCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="},"byteCode":{"approval":"CyAEAAIBCCYBBBUffHUxGRREgAQCvs4RNhoAjgEAbjEYQQBZggMEqI60kATYvZOfBC7uu7k2GgCOAwB7ANMAAQCANxUffHUAMVpLUC1WYXVsdCB2MS4wIC0gUHJpdmFjeS1QcmVzZXJ2aW5nIEFJIFByb2N0b3JpbmewJEOABHUsOsA2GgCOAQABACRDNhoBSSJZIwhLARUSRFcCAIAJAAdIZWxsbywgTFBJVwIAFRZXBgJcAChMULAkQzYaAUkiWSMITBUSRDYaAkkiWSMITBUSRDYaA0kVJRJENhoESSJZIwhMFRJEF4FkDkSAIhUffHUAHFByb29mIHN1Ym1pdHRlZCBzdWNjZXNzZnVsbHmwJEM2GgFJIlkjCEwVEkQ2GgJJIlkjCEwVEkQ2GgNJFSUSRDYaBEkiWSMITBUSRBeBZA5BAA4kgAEAIk8CVChMULAkQyJC/+8=","clear":"C4EBQw=="},"compilerInfo":{"compiler":"puya","compilerVersion":{"major":5,"minor":7,"patch":1}},"events":[],"templateVariables":{}} as unknown as Arc56Contract
 
 /**
  * A state record containing binary data
@@ -72,6 +72,9 @@ export type ZkpVaultArgs = {
    */
   obj: {
     'create_application()void': Record<string, never>
+    'hello(string)string': {
+      name: string
+    }
     'submit_proof(string,string,uint64,string)string': {
       /**
        * The exam identifier
@@ -115,6 +118,7 @@ export type ZkpVaultArgs = {
    */
   tuple: {
     'create_application()void': []
+    'hello(string)string': [name: string]
     'submit_proof(string,string,uint64,string)string': [examId: string, studentHash: string, trustScore: bigint | number, proofHash: string]
     'verify_submission(string,string,uint64,string)bool': [examId: string, studentHash: string, trustScore: bigint | number, proofHash: string]
     'get_contract_info()string': []
@@ -126,6 +130,7 @@ export type ZkpVaultArgs = {
  */
 export type ZkpVaultReturns = {
   'create_application()void': void
+  'hello(string)string': string
   'submit_proof(string,string,uint64,string)string': string
   'verify_submission(string,string,uint64,string)bool': boolean
   'get_contract_info()string': string
@@ -143,6 +148,11 @@ export type ZkpVaultTypes = {
       argsObj: ZkpVaultArgs['obj']['create_application()void']
       argsTuple: ZkpVaultArgs['tuple']['create_application()void']
       returns: ZkpVaultReturns['create_application()void']
+    }>
+    & Record<'hello(string)string' | 'hello', {
+      argsObj: ZkpVaultArgs['obj']['hello(string)string']
+      argsTuple: ZkpVaultArgs['tuple']['hello(string)string']
+      returns: ZkpVaultReturns['hello(string)string']
     }>
     & Record<'submit_proof(string,string,uint64,string)string' | 'submit_proof', {
       argsObj: ZkpVaultArgs['obj']['submit_proof(string,string,uint64,string)string']
@@ -204,6 +214,8 @@ export type MethodReturn<TSignature extends ZkpVaultSignatures> = ZkpVaultTypes[
 export type ZkpVaultCreateCallParams =
   | Expand<CallParams<ZkpVaultArgs['obj']['create_application()void'] | ZkpVaultArgs['tuple']['create_application()void']> & {method: 'create_application'} & {onComplete?: OnApplicationComplete.NoOpOC} & CreateSchema>
   | Expand<CallParams<ZkpVaultArgs['obj']['create_application()void'] | ZkpVaultArgs['tuple']['create_application()void']> & {method: 'create_application()void'} & {onComplete?: OnApplicationComplete.NoOpOC} & CreateSchema>
+  | Expand<CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & {method: 'hello'} & {onComplete?: OnApplicationComplete.NoOpOC} & CreateSchema>
+  | Expand<CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & {method: 'hello(string)string'} & {onComplete?: OnApplicationComplete.NoOpOC} & CreateSchema>
 /**
  * Defines arguments required for the deploy method.
  */
@@ -229,12 +241,15 @@ export abstract class ZkpVaultParamsFactory {
           case 'create_application':
           case 'create_application()void':
             return ZkpVaultParamsFactory.create.createApplication(params)
+          case 'hello':
+          case 'hello(string)string':
+            return ZkpVaultParamsFactory.create.hello(params)
         }
         throw new Error(`Unknown ' + verb + ' method`)
       },
 
       /**
-       * Constructs create ABI call params for the ZKPVault smart contract using the create_application()void ABI method
+       * Constructs create ABI call params for the ZkpVault smart contract using the create_application()void ABI method
        *
        * @param params Parameters for the call
        * @returns An `AppClientMethodCallParams` object for the call
@@ -246,9 +261,35 @@ export abstract class ZkpVaultParamsFactory {
           args: Array.isArray(params.args) ? params.args : [],
         }
       },
+      /**
+       * Constructs create ABI call params for the ZkpVault smart contract using the hello(string)string ABI method
+       *
+       * @param params Parameters for the call
+       * @returns An `AppClientMethodCallParams` object for the call
+       */
+      hello(params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & AppClientCompilationParams & {onComplete?: OnApplicationComplete.NoOpOC}): AppClientMethodCallParams & AppClientCompilationParams & {onComplete?: OnApplicationComplete.NoOpOC} {
+        return {
+          ...params,
+          method: 'hello(string)string' as const,
+          args: Array.isArray(params.args) ? params.args : [params.args.name],
+        }
+      },
     }
   }
 
+  /**
+   * Constructs a no op call for the hello(string)string ABI method
+   *
+   * @param params Parameters for the call
+   * @returns An `AppClientMethodCallParams` object for the call
+   */
+  static hello(params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & CallOnComplete): AppClientMethodCallParams & CallOnComplete {
+    return {
+      ...params,
+      method: 'hello(string)string' as const,
+      args: Array.isArray(params.args) ? params.args : [params.args.name],
+    }
+  }
   /**
    * Constructs a no op call for the submit_proof(string,string,uint64,string)string ABI method
    *
@@ -297,7 +338,7 @@ export abstract class ZkpVaultParamsFactory {
 }
 
 /**
- * A factory to create and deploy one or more instance of the ZKPVault smart contract and to create one or more app clients to interact with those (or other) app instances
+ * A factory to create and deploy one or more instance of the ZkpVault smart contract and to create one or more app clients to interact with those (or other) app instances
  */
 export class ZkpVaultFactory {
   /**
@@ -360,7 +401,7 @@ export class ZkpVaultFactory {
   }
 
   /**
-   * Idempotently deploys the ZKPVault smart contract.
+   * Idempotently deploys the ZkpVault smart contract.
    *
    * @param params The arguments for the contract calls and any additional parameters for the call
    * @returns The deployment result
@@ -382,7 +423,7 @@ export class ZkpVaultFactory {
      */
     create: {
       /**
-       * Creates a new instance of the ZKPVault smart contract using the create_application()void ABI method.
+       * Creates a new instance of the ZkpVault smart contract using the create_application()void ABI method.
        *
        * Initialize the contract
        *
@@ -391,6 +432,15 @@ export class ZkpVaultFactory {
        */
       createApplication: (params: CallParams<ZkpVaultArgs['obj']['create_application()void'] | ZkpVaultArgs['tuple']['create_application()void']> & AppClientCompilationParams & CreateSchema & {onComplete?: OnApplicationComplete.NoOpOC} = {args: []}) => {
         return this.appFactory.params.create(ZkpVaultParamsFactory.create.createApplication(params))
+      },
+      /**
+       * Creates a new instance of the ZkpVault smart contract using the hello(string)string ABI method.
+       *
+       * @param params The params for the smart contract call
+       * @returns The create params
+       */
+      hello: (params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & AppClientCompilationParams & CreateSchema & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+        return this.appFactory.params.create(ZkpVaultParamsFactory.create.hello(params))
       },
     },
 
@@ -405,7 +455,7 @@ export class ZkpVaultFactory {
      */
     create: {
       /**
-       * Creates a new instance of the ZKPVault smart contract using the create_application()void ABI method.
+       * Creates a new instance of the ZkpVault smart contract using the create_application()void ABI method.
        *
        * Initialize the contract
        *
@@ -414,6 +464,15 @@ export class ZkpVaultFactory {
        */
       createApplication: (params: CallParams<ZkpVaultArgs['obj']['create_application()void'] | ZkpVaultArgs['tuple']['create_application()void']> & AppClientCompilationParams & CreateSchema & {onComplete?: OnApplicationComplete.NoOpOC} = {args: []}) => {
         return this.appFactory.createTransaction.create(ZkpVaultParamsFactory.create.createApplication(params))
+      },
+      /**
+       * Creates a new instance of the ZkpVault smart contract using the hello(string)string ABI method.
+       *
+       * @param params The params for the smart contract call
+       * @returns The create transaction
+       */
+      hello: (params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & AppClientCompilationParams & CreateSchema & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+        return this.appFactory.createTransaction.create(ZkpVaultParamsFactory.create.hello(params))
       },
     },
 
@@ -428,7 +487,7 @@ export class ZkpVaultFactory {
      */
     create: {
       /**
-       * Creates a new instance of the ZKPVault smart contract using an ABI method call using the create_application()void ABI method.
+       * Creates a new instance of the ZkpVault smart contract using an ABI method call using the create_application()void ABI method.
        *
        * Initialize the contract
        *
@@ -439,13 +498,23 @@ export class ZkpVaultFactory {
         const result = await this.appFactory.send.create(ZkpVaultParamsFactory.create.createApplication(params))
         return { result: { ...result.result, return: result.result.return as unknown as (undefined | ZkpVaultReturns['create_application()void']) }, appClient: new ZkpVaultClient(result.appClient) }
       },
+      /**
+       * Creates a new instance of the ZkpVault smart contract using an ABI method call using the hello(string)string ABI method.
+       *
+       * @param params The params for the smart contract call
+       * @returns The create result
+       */
+      hello: async (params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & AppClientCompilationParams & CreateSchema & SendParams & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+        const result = await this.appFactory.send.create(ZkpVaultParamsFactory.create.hello(params))
+        return { result: { ...result.result, return: result.result.return as unknown as (undefined | ZkpVaultReturns['hello(string)string']) }, appClient: new ZkpVaultClient(result.appClient) }
+      },
     },
 
   }
 
 }
 /**
- * A client to make calls to the ZKPVault smart contract
+ * A client to make calls to the ZkpVault smart contract
  */
 export class ZkpVaultClient {
   /**
@@ -532,7 +601,7 @@ export class ZkpVaultClient {
    */
   readonly params = {
     /**
-     * Makes a clear_state call to an existing instance of the ZKPVault smart contract.
+     * Makes a clear_state call to an existing instance of the ZkpVault smart contract.
      *
      * @param params The params for the bare (raw) call
      * @returns The clearState result
@@ -542,7 +611,17 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `submit_proof(string,string,uint64,string)string` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `hello(string)string` ABI method.
+     *
+     * @param params The params for the smart contract call
+     * @returns The call params
+     */
+    hello: (params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+      return this.appClient.params.call(ZkpVaultParamsFactory.hello(params))
+    },
+
+    /**
+     * Makes a call to the ZkpVault smart contract using the `submit_proof(string,string,uint64,string)string` ABI method.
      *
      * Submit exam proof for a student
      *
@@ -554,7 +633,7 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `verify_submission(string,string,uint64,string)bool` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `verify_submission(string,string,uint64,string)bool` ABI method.
      *
      * Verify that a proof submission is valid
      *
@@ -566,7 +645,7 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `get_contract_info()string` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `get_contract_info()string` ABI method.
      *
      * Get contract information
      *
@@ -584,7 +663,7 @@ export class ZkpVaultClient {
    */
   readonly createTransaction = {
     /**
-     * Makes a clear_state call to an existing instance of the ZKPVault smart contract.
+     * Makes a clear_state call to an existing instance of the ZkpVault smart contract.
      *
      * @param params The params for the bare (raw) call
      * @returns The clearState result
@@ -594,7 +673,17 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `submit_proof(string,string,uint64,string)string` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `hello(string)string` ABI method.
+     *
+     * @param params The params for the smart contract call
+     * @returns The call transaction
+     */
+    hello: (params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+      return this.appClient.createTransaction.call(ZkpVaultParamsFactory.hello(params))
+    },
+
+    /**
+     * Makes a call to the ZkpVault smart contract using the `submit_proof(string,string,uint64,string)string` ABI method.
      *
      * Submit exam proof for a student
      *
@@ -606,7 +695,7 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `verify_submission(string,string,uint64,string)bool` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `verify_submission(string,string,uint64,string)bool` ABI method.
      *
      * Verify that a proof submission is valid
      *
@@ -618,7 +707,7 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `get_contract_info()string` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `get_contract_info()string` ABI method.
      *
      * Get contract information
      *
@@ -636,7 +725,7 @@ export class ZkpVaultClient {
    */
   readonly send = {
     /**
-     * Makes a clear_state call to an existing instance of the ZKPVault smart contract.
+     * Makes a clear_state call to an existing instance of the ZkpVault smart contract.
      *
      * @param params The params for the bare (raw) call
      * @returns The clearState result
@@ -646,7 +735,18 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `submit_proof(string,string,uint64,string)string` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `hello(string)string` ABI method.
+     *
+     * @param params The params for the smart contract call
+     * @returns The call result
+     */
+    hello: async (params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & SendParams & {onComplete?: OnApplicationComplete.NoOpOC}) => {
+      const result = await this.appClient.send.call(ZkpVaultParamsFactory.hello(params))
+      return {...result, return: result.return as unknown as (undefined | ZkpVaultReturns['hello(string)string'])}
+    },
+
+    /**
+     * Makes a call to the ZkpVault smart contract using the `submit_proof(string,string,uint64,string)string` ABI method.
      *
      * Submit exam proof for a student
      *
@@ -659,7 +759,7 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `verify_submission(string,string,uint64,string)bool` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `verify_submission(string,string,uint64,string)bool` ABI method.
      *
      * Verify that a proof submission is valid
      *
@@ -672,7 +772,7 @@ export class ZkpVaultClient {
     },
 
     /**
-     * Makes a call to the ZKPVault smart contract using the `get_contract_info()string` ABI method.
+     * Makes a call to the ZkpVault smart contract using the `get_contract_info()string` ABI method.
      *
      * Get contract information
      *
@@ -697,7 +797,7 @@ export class ZkpVaultClient {
   }
 
   /**
-   * Methods to access state for the current ZKPVault app
+   * Methods to access state for the current ZkpVault app
    */
   state = {
   }
@@ -709,7 +809,15 @@ export class ZkpVaultClient {
     const resultMappers: Array<undefined | ((x: ABIReturn | undefined) => any)> = []
     return {
       /**
-       * Add a submit_proof(string,string,uint64,string)string method call against the ZKPVault contract
+       * Add a hello(string)string method call against the ZkpVault contract
+       */
+      hello(params: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
+        promiseChain = promiseChain.then(async () => composer.addAppCallMethodCall(await client.params.hello(params)))
+        resultMappers.push((v) => client.decodeReturnValue('hello(string)string', v))
+        return this
+      },
+      /**
+       * Add a submit_proof(string,string,uint64,string)string method call against the ZkpVault contract
        */
       submitProof(params: CallParams<ZkpVaultArgs['obj']['submit_proof(string,string,uint64,string)string'] | ZkpVaultArgs['tuple']['submit_proof(string,string,uint64,string)string']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
         promiseChain = promiseChain.then(async () => composer.addAppCallMethodCall(await client.params.submitProof(params)))
@@ -717,7 +825,7 @@ export class ZkpVaultClient {
         return this
       },
       /**
-       * Add a verify_submission(string,string,uint64,string)bool method call against the ZKPVault contract
+       * Add a verify_submission(string,string,uint64,string)bool method call against the ZkpVault contract
        */
       verifySubmission(params: CallParams<ZkpVaultArgs['obj']['verify_submission(string,string,uint64,string)bool'] | ZkpVaultArgs['tuple']['verify_submission(string,string,uint64,string)bool']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
         promiseChain = promiseChain.then(async () => composer.addAppCallMethodCall(await client.params.verifySubmission(params)))
@@ -725,7 +833,7 @@ export class ZkpVaultClient {
         return this
       },
       /**
-       * Add a get_contract_info()string method call against the ZKPVault contract
+       * Add a get_contract_info()string method call against the ZkpVault contract
        */
       getContractInfo(params: CallParams<ZkpVaultArgs['obj']['get_contract_info()string'] | ZkpVaultArgs['tuple']['get_contract_info()string']> & {onComplete?: OnApplicationComplete.NoOpOC}) {
         promiseChain = promiseChain.then(async () => composer.addAppCallMethodCall(await client.params.getContractInfo(params)))
@@ -733,7 +841,7 @@ export class ZkpVaultClient {
         return this
       },
       /**
-       * Add a clear state call to the ZKPVault contract
+       * Add a clear state call to the ZkpVault contract
        */
       clearState(params: AppClientBareCallParams) {
         promiseChain = promiseChain.then(() => composer.addAppCall(client.params.clearState(params)))
@@ -768,6 +876,15 @@ export class ZkpVaultClient {
 }
 export type ZkpVaultComposer<TReturns extends [...any[]] = []> = {
   /**
+   * Calls the hello(string)string ABI method.
+   *
+   * @param args The arguments for the contract call
+   * @param params Any additional parameters for the call
+   * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions
+   */
+  hello(params?: CallParams<ZkpVaultArgs['obj']['hello(string)string'] | ZkpVaultArgs['tuple']['hello(string)string']>): ZkpVaultComposer<[...TReturns, ZkpVaultReturns['hello(string)string'] | undefined]>
+
+  /**
    * Calls the submit_proof(string,string,uint64,string)string ABI method.
    *
    * Submit exam proof for a student
@@ -801,7 +918,7 @@ export type ZkpVaultComposer<TReturns extends [...any[]] = []> = {
   getContractInfo(params?: CallParams<ZkpVaultArgs['obj']['get_contract_info()string'] | ZkpVaultArgs['tuple']['get_contract_info()string']>): ZkpVaultComposer<[...TReturns, ZkpVaultReturns['get_contract_info()string'] | undefined]>
 
   /**
-   * Makes a clear_state call to an existing instance of the ZKPVault smart contract.
+   * Makes a clear_state call to an existing instance of the ZkpVault smart contract.
    *
    * @param args The arguments for the bare call
    * @returns The typed transaction composer so you can fluently chain multiple calls or call execute to execute all queued up transactions

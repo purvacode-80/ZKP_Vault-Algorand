@@ -1,13 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { aiProctor, DetectionResult, IncidentLog, SessionData } from './services/ai-proctor-service';
-import { algodClient, submitProofToBlockchain } from './services/algorand-service';
+import * as tf from '@tensorflow/tfjs';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import { submitProofToBlockchain } from '../services/algorand-service';
 import './StudentExam.css';
 
 interface StudentExamProps {
   examId: string;
   studentId: string;
-  examDuration: number; // in minutes
-  onComplete: (sessionData: SessionData) => void;
+  examDuration: number;
+  onComplete: (sessionData: any) => void;
+}
+
+interface Incident {
+  type: 'no_face' | 'multi_face' | 'looking_away' | 'phone_detected';
+  timestamp: number;
+  details: string;
 }
 
 export const StudentExam: React.FC<StudentExamProps> = ({
@@ -18,57 +25,82 @@ export const StudentExam: React.FC<StudentExamProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationFrameRef = useRef<number>();
-
+  const detectionIntervalRef = useRef<any>(null);
+  
+  // Models
+  const [faceModel, setFaceModel] = useState<any>(null);
+  const [objectModel, setObjectModel] = useState<any>(null);
+  
+  // State
   const [isInitializing, setIsInitializing] = useState(true);
   const [isProctoring, setIsProctoring] = useState(false);
-  const [currentDetection, setCurrentDetection] = useState<DetectionResult | null>(null);
-  const [incidents, setIncidents] = useState<IncidentLog[]>([]);
-  const [detections, setDetections] = useState<DetectionResult[]>([]);
-  const [trustScore, setTrustScore] = useState(100);
-  const [timeRemaining, setTimeRemaining] = useState(examDuration * 60); // seconds
-  const [sessionData, setSessionData] = useState<Partial<SessionData>>({
-    examId,
-    studentHash: '',
-    startTime: Date.now(),
-    incidents: [],
-    detections: [],
-    trustScore: 100,
-    proofHash: '',
-  });
-
   const [webcamError, setWebcamError] = useState<string | null>(null);
+  
+  // Detection data
+  const [currentFaceCount, setCurrentFaceCount] = useState(0);
+  const [currentPhoneDetected, setCurrentPhoneDetected] = useState(false);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [trustScore, setTrustScore] = useState(100);
+  
+  // Timer
+  const [timeRemaining, setTimeRemaining] = useState(examDuration * 60);
+  
+  // Consecutive counters
+  const consecutiveNoFaceRef = useRef(0);
+  const consecutiveMultiFaceRef = useRef(0);
+  const lastIncidentTimeRef = useRef<Record<string, number>>({});
 
-  // Initialize AI models and webcam
+  // Initialize models and webcam
   useEffect(() => {
-    const initialize = async () => {
+    const init = async () => {
       try {
-        // Initialize AI Proctor
-        await aiProctor.initialize();
+        console.log('🚀 Starting initialization...');
+        
+        // Initialize TensorFlow
+        await tf.setBackend('webgl');
+        await tf.ready();
+        console.log('✅ TensorFlow ready');
 
-        // Generate student hash
-        const studentHash = await aiProctor.generateStudentHash(studentId);
-        setSessionData(prev => ({ ...prev, studentHash }));
-
-        // Request webcam access
+        // Start webcam
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480 },
           audio: false,
         });
-
+        
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          await new Promise(resolve => {
+            if (videoRef.current) {
+              videoRef.current.onloadedmetadata = resolve;
+            }
+          });
+          console.log('✅ Webcam started');
         }
 
+        // Load BlazeFace
+        console.log('📥 Loading BlazeFace...');
+        const blazeface = await import('@tensorflow-models/blazeface');
+        const face = await blazeface.load();
+        setFaceModel(face);
+        console.log('✅ BlazeFace loaded');
+
+        // Load COCO-SSD
+        console.log('📥 Loading COCO-SSD...');
+        const obj = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+        setObjectModel(obj);
+        console.log('✅ COCO-SSD loaded');
+
         setIsInitializing(false);
+        console.log('🎉 Initialization complete!');
+        
       } catch (error) {
-        console.error('Initialization error:', error);
-        setWebcamError('Failed to initialize. Please allow camera access.');
+        console.error('❌ Initialization error:', error);
+        setWebcamError('Failed to initialize. Please allow camera access and refresh.');
         setIsInitializing(false);
       }
     };
 
-    initialize();
+    init();
 
     return () => {
       // Cleanup
@@ -76,19 +108,11 @@ export const StudentExam: React.FC<StudentExamProps> = ({
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
       }
-      aiProctor.dispose();
     };
-  }, [studentId]);
-
-  // Start proctoring
-  const startProctoring = () => {
-    setIsProctoring(true);
-    setSessionData(prev => ({ ...prev, startTime: Date.now() }));
-    detectFrame();
-  };
+  }, []);
 
   // Timer countdown
   useEffect(() => {
@@ -97,7 +121,7 @@ export const StudentExam: React.FC<StudentExamProps> = ({
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          endExam();
+          handleEndExam();
           return 0;
         }
         return prev - 1;
@@ -107,42 +131,128 @@ export const StudentExam: React.FC<StudentExamProps> = ({
     return () => clearInterval(timer);
   }, [isProctoring]);
 
-  // Detection loop
-  // const detectFrame = async () => {
-  //   if (!videoRef.current || !isProctoring) return;
+  // Start proctoring
+  const handleStartProctoring = () => {
+    if (!faceModel || !objectModel) {
+      alert('AI models not loaded yet. Please wait a moment.');
+      return;
+    }
 
-  //   try {
-  //     // Analyze current frame
-  //     const detection = await aiProctor.analyzeFrame(videoRef.current);
-  //     setCurrentDetection(detection);
+    console.log('▶️ Starting exam proctoring...');
+    setIsProctoring(true);
+    
+    // Start detection loop - runs every 500ms
+    detectionIntervalRef.current = setInterval(async () => {
+      await runDetection();
+    }, 500);
+  };
 
-  //     // Store detection
-  //     setDetections(prev => [...prev, detection]);
+  // Main detection function
+  const runDetection = async () => {
+    if (!videoRef.current || !faceModel || !objectModel) return;
 
-  //     // Check for incidents
-  //     const newIncidents = aiProctor.checkForIncidents(detection, incidents);
-  //     if (newIncidents.length > incidents.length) {
-  //       setIncidents(newIncidents);
-  //     }
+    try {
+      // Detect faces
+      const faces = await faceModel.estimateFaces(videoRef.current, false);
+      const faceCount = faces.filter((f: any) => {
+        const conf = Array.isArray(f.probability) ? f.probability[0] : f.probability;
+        return conf > 0.5;
+      }).length;
 
-  //     // Update trust score
-  //     const score = aiProctor.calculateTrustScore({
-  //       incidents: newIncidents,
-  //     });
-  //     setTrustScore(score);
+      setCurrentFaceCount(faceCount);
 
-  //     // Draw detection overlays
-  //     drawOverlays(detection);
+      // Detect objects
+      const objects = await objectModel.detect(videoRef.current);
+      const phoneDetected = objects.some(
+        (obj: any) => obj.class === 'cell phone' && obj.score > 0.3
+      );
 
-  //     // Continue detection loop
-  //     animationFrameRef.current = requestAnimationFrame(detectFrame);
-  //   } catch (error) {
-  //     console.error('Detection error:', error);
-  //   }
-  // };
+      setCurrentPhoneDetected(phoneDetected);
 
-  // Draw AI detection overlays on canvas
-  const drawOverlays = (detection: DetectionResult) => {
+      // Log occasionally
+      if (Math.random() < 0.1) {
+        console.log(`📊 Detection: ${faceCount} face(s), phone: ${phoneDetected}`);
+        if (objects.length > 0) {
+          console.log('🔍 Objects:', objects.map((o: any) => `${o.class} (${(o.score*100).toFixed(1)}%)`));
+        }
+      }
+
+      // Check for incidents
+      checkIncidents(faceCount, phoneDetected);
+
+      // Draw overlays
+      drawOverlay(faceCount, phoneDetected);
+
+    } catch (error) {
+      console.error('Detection error:', error);
+    }
+  };
+
+  // Check for incidents
+  const checkIncidents = (faceCount: number, phoneDetected: boolean) => {
+    const now = Date.now();
+    const canLog = (type: string) => {
+      const lastTime = lastIncidentTimeRef.current[type] || 0;
+      return now - lastTime > 3000; // 3 second cooldown
+    };
+
+    // No face
+    if (faceCount === 0) {
+      consecutiveNoFaceRef.current++;
+      if (consecutiveNoFaceRef.current > 5 && canLog('no_face')) {
+        addIncident('no_face', 'No face detected');
+        consecutiveNoFaceRef.current = 0;
+      }
+    } else {
+      consecutiveNoFaceRef.current = 0;
+    }
+
+    // Multiple faces
+    if (faceCount > 1) {
+      consecutiveMultiFaceRef.current++;
+      if (consecutiveMultiFaceRef.current > 3 && canLog('multi_face')) {
+        addIncident('multi_face', `${faceCount} faces detected`);
+        consecutiveMultiFaceRef.current = 0;
+      }
+    } else {
+      consecutiveMultiFaceRef.current = 0;
+    }
+
+    // Phone detected
+    if (phoneDetected && canLog('phone_detected')) {
+      addIncident('phone_detected', 'Mobile phone detected');
+    }
+  };
+
+  // Add incident
+  const addIncident = (type: Incident['type'], details: string) => {
+    const incident: Incident = {
+      type,
+      timestamp: Date.now(),
+      details,
+    };
+
+    console.log(`🚨 INCIDENT: ${type} - ${details}`);
+    
+    setIncidents(prev => {
+      const newIncidents = [...prev, incident];
+      
+      // Update trust score
+      let penalty = 0;
+      if (type === 'no_face') penalty = 5;
+      if (type === 'multi_face') penalty = 10;
+      if (type === 'phone_detected') penalty = 15;
+      
+      setTrustScore(current => Math.max(0, current - penalty));
+      
+      return newIncidents;
+    });
+
+    lastIncidentTimeRef.current[type] = Date.now();
+  };
+
+  // Draw overlay on canvas
+  const drawOverlay = (faceCount: number, phoneDetected: boolean) => {
     if (!canvasRef.current || !videoRef.current) return;
 
     const canvas = canvasRef.current;
@@ -151,117 +261,85 @@ export const StudentExam: React.FC<StudentExamProps> = ({
 
     if (!ctx) return;
 
-    // Match canvas size to video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // Clear previous drawings
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw face count indicator
-    ctx.strokeStyle = detection.faceCount === 1 ? '#00ff00' : '#ff0000';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    // Border color based on status
+    ctx.strokeStyle = faceCount === 1 && !phoneDetected ? '#00ff00' : '#ff0000';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
-    // Draw status text
-    ctx.font = 'bold 24px Arial';
-    ctx.fillStyle = '#00ff00';
-    ctx.fillText('🔒 Privacy Mode Active', 30, 50);
+    // Privacy text
+    ctx.font = 'bold 20px Arial';
+    ctx.fillStyle = '#00ff88';
+    ctx.fillText('🔒 Privacy Protected', 20, 40);
 
-    // Draw detection indicators
+    // Status indicators
     const indicators = [
-      { label: 'Face Count', value: detection.faceCount, ok: detection.faceCount === 1 },
-      { label: 'Eyes on Screen', value: detection.isLookingAtScreen ? 'Yes' : 'No', ok: detection.isLookingAtScreen },
-      { label: 'Phone Detected', value: detection.phoneDetected ? 'Yes' : 'No', ok: !detection.phoneDetected },
+      { label: `Faces: ${faceCount}`, ok: faceCount === 1 },
+      { label: `Phone: ${phoneDetected ? 'YES' : 'NO'}`, ok: !phoneDetected },
     ];
 
-    let yPos = canvas.height - 100;
+    let y = canvas.height - 60;
     indicators.forEach(ind => {
-      ctx.fillStyle = ind.ok ? '#00ff00' : '#ff6600';
-      ctx.font = '18px Arial';
-      ctx.fillText(`${ind.label}: ${ind.value}`, 30, yPos);
-      yPos += 30;
+      ctx.fillStyle = ind.ok ? '#00ff88' : '#ff6b6b';
+      ctx.font = '16px Arial';
+      ctx.fillText(ind.label, 20, y);
+      y += 25;
     });
   };
 
-  // End exam and submit proof
-  const endExam = async () => {
+  // End exam
+  const handleEndExam = async () => {
+    console.log('⏹️ Ending exam...');
     setIsProctoring(false);
-
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
+    
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current);
     }
 
-    const finalSessionData: SessionData = {
-      examId,
-      studentHash: sessionData.studentHash!,
-      startTime: sessionData.startTime!,
-      endTime: Date.now(),
-      incidents,
-      detections,
-      trustScore,
-      proofHash: '',
-    };
+    // Generate student hash
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`${studentId}_zkp-vault`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const studentHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
     // Generate proof hash
-    const proofHash = await aiProctor.generateProofHash({
-      ...finalSessionData,
+    const proofData = {
+      examId,
+      studentHash,
       trustScore,
-    });
+      incidents: incidents.length,
+      timestamp: Date.now(),
+    };
+    const proofJSON = JSON.stringify(proofData);
+    const proofBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(proofJSON));
+    const proofArray = Array.from(new Uint8Array(proofBuffer));
+    const proofHash = '0x' + proofArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    finalSessionData.proofHash = proofHash;
-    setSessionData(finalSessionData);
+    const sessionData = {
+      examId,
+      studentId,
+      studentHash,
+      startTime: Date.now() - (examDuration * 60 - timeRemaining) * 1000,
+      endTime: Date.now(),
+      incidents,
+      trustScore,
+      proofHash,
+      detections: [],
+    };
 
-    // Call completion callback
-    onComplete(finalSessionData);
+    onComplete(sessionData);
   };
 
-  // Format time remaining
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
-  const detectFrame = async () => {
-  if (!videoRef.current || !isProctoring) return;
-
-  try {
-    // 1. Analyze current frame
-    const detection = await aiProctor.analyzeFrame(videoRef.current);
-    setCurrentDetection(detection);
-
-    // 2. Store detection
-    setDetections(prev => [...prev, detection]);
-
-    // 3. FIX: Check for incidents and update score correctly
-    // We pass the current 'incidents' state to get the updated list
-    const updatedIncidents = aiProctor.checkForIncidents(detection, incidents);
-
-    // Only update state if a new incident was actually added
-    if (updatedIncidents.length > incidents.length) {
-      setIncidents(updatedIncidents);
-      console.log("New incident detected!", updatedIncidents);
-    }
-
-    // 4. FIX: Calculate trust score using the UPDATED list
-    // This ensures that even before the state re-renders, the score
-    // accounts for the incident that just happened.
-    const score = aiProctor.calculateTrustScore({
-      incidents: updatedIncidents,
-    });
-
-    setTrustScore(score);
-
-    // 5. Draw detection overlays
-    drawOverlays(detection);
-
-    // 6. Continue detection loop
-    animationFrameRef.current = requestAnimationFrame(detectFrame);
-    } catch (error) {
-      console.error('Detection error:', error);
-    }
-};
 
   return (
     <div className="student-exam">
@@ -275,7 +353,6 @@ export const StudentExam: React.FC<StudentExamProps> = ({
       </div>
 
       <div className="exam-content">
-        {/* Video Feed Section */}
         <div className="video-section">
           <div className="video-container">
             <video
@@ -295,26 +372,25 @@ export const StudentExam: React.FC<StudentExamProps> = ({
             <div className="error-message">{webcamError}</div>
           )}
 
+          {isInitializing && !webcamError && (
+            <div className="loading-message">
+              Initializing AI models... Please wait.
+            </div>
+          )}
+
           {!isProctoring && !isInitializing && !webcamError && (
-            <button
-              className="start-button"
-              onClick={startProctoring}
-            >
+            <button className="start-button" onClick={handleStartProctoring}>
               Start Exam
             </button>
           )}
 
           {isProctoring && (
-            <button
-              className="end-button"
-              onClick={endExam}
-            >
+            <button className="end-button" onClick={handleEndExam}>
               Submit Exam
             </button>
           )}
         </div>
 
-        {/* Privacy & Status Section */}
         <div className="status-section">
           <div className="privacy-status">
             <div className="status-icon">🟢</div>
@@ -338,29 +414,21 @@ export const StudentExam: React.FC<StudentExamProps> = ({
             <div className="score-value">{trustScore}</div>
           </div>
 
-          {currentDetection && (
-            <div className="detection-status">
-              <h4>Current Status</h4>
-              <div className="status-item">
-                <span className={currentDetection.faceCount === 1 ? 'status-ok' : 'status-warning'}>
-                  {currentDetection.faceCount === 1 ? '✅' : '⚠️'}
-                </span>
-                Face Detected: {currentDetection.faceCount}
-              </div>
-              <div className="status-item">
-                <span className={currentDetection.isLookingAtScreen ? 'status-ok' : 'status-warning'}>
-                  {currentDetection.isLookingAtScreen ? '✅' : '⚠️'}
-                </span>
-                Eyes on Screen
-              </div>
-              <div className="status-item">
-                <span className={!currentDetection.phoneDetected ? 'status-ok' : 'status-warning'}>
-                  {!currentDetection.phoneDetected ? '✅' : '⚠️'}
-                </span>
-                No Phone Detected
-              </div>
+          <div className="detection-status">
+            <h4>Current Status</h4>
+            <div className="status-item">
+              <span className={currentFaceCount === 1 ? 'status-ok' : 'status-warning'}>
+                {currentFaceCount === 1 ? '✅' : '⚠️'}
+              </span>
+              Face Count: {currentFaceCount}
             </div>
-          )}
+            <div className="status-item">
+              <span className={!currentPhoneDetected ? 'status-ok' : 'status-warning'}>
+                {!currentPhoneDetected ? '✅' : '⚠️'}
+              </span>
+              Phone: {currentPhoneDetected ? 'DETECTED' : 'None'}
+            </div>
+          </div>
 
           <div className="incidents-log">
             <h4>Incidents: {incidents.length}</h4>
@@ -381,7 +449,7 @@ export const StudentExam: React.FC<StudentExamProps> = ({
           <div className="ai-status">
             <p>🤖 Local AI Processing Active</p>
             <p className="small-text">
-              Models: Face Detection, Gaze Tracking, Object Detection
+              Detection running every 0.5 seconds
             </p>
           </div>
         </div>

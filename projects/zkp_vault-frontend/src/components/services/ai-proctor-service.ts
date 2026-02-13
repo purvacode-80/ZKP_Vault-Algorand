@@ -32,12 +32,14 @@ export class AIProctorService {
   
   // Tracking state
   private consecutiveLookingAway = 0;
-  private readonly LOOKING_AWAY_THRESHOLD = 30; // frames
-  private readonly FACE_CONFIDENCE_THRESHOLD = 0.6;
+  private consecutiveNoFace = 0;
+  private readonly LOOKING_AWAY_THRESHOLD = 15; // Reduced from 30 for faster detection
+  private readonly NO_FACE_THRESHOLD = 10; // frames before logging
+  private readonly FACE_CONFIDENCE_THRESHOLD = 0.5; // Lowered for easier detection
   
   // Track last incident times to prevent spam
   private lastIncidentTimes: Map<string, number> = new Map();
-  private readonly INCIDENT_COOLDOWN = 2000; // 2 seconds between same type
+  private readonly INCIDENT_COOLDOWN = 3000; // 3 seconds
   
   /**
    * Initialize all AI models
@@ -47,23 +49,34 @@ export class AIProctorService {
     
     try {
       // Initialize TensorFlow.js backend
+      await tf.setBackend('webgl');
       await tf.ready();
-      console.log('✅ TensorFlow.js ready');
-      
-      // Load COCO-SSD for object detection (phones, etc.)
-      this.objectDetectionModel = await cocoSsd.load();
-      console.log('✅ Object detection model loaded');
+      console.log('✅ TensorFlow.js ready with backend:', tf.getBackend());
       
       // Load BlazeFace for face detection
+      console.log('📥 Loading BlazeFace model...');
       const blazeface = await import('@tensorflow-models/blazeface');
       this.faceDetectionModel = await blazeface.load();
-      console.log('✅ BlazeFace model loaded');
+      console.log('✅ BlazeFace model loaded successfully');
+      
+      // Load COCO-SSD for object detection (phones, etc.)
+      console.log('📥 Loading COCO-SSD model...');
+      this.objectDetectionModel = await cocoSsd.load({
+        base: 'lite_mobilenet_v2' // Faster, lighter model
+      });
+      console.log('✅ COCO-SSD model loaded successfully');
       
       this.isInitialized = true;
-      console.log('🎉 AI Proctor initialized successfully');
+      console.log('🎉 AI Proctor initialized and ready!');
+      console.log('👀 Detection thresholds:', {
+        faceConfidence: this.FACE_CONFIDENCE_THRESHOLD,
+        lookingAwayFrames: this.LOOKING_AWAY_THRESHOLD,
+        noFaceFrames: this.NO_FACE_THRESHOLD,
+        incidentCooldown: `${this.INCIDENT_COOLDOWN}ms`
+      });
     } catch (error) {
       console.error('❌ Failed to initialize AI Proctor:', error);
-      throw new Error('Failed to initialize AI models');
+      throw new Error('Failed to initialize AI models: ' + error);
     }
   }
   
@@ -75,18 +88,36 @@ export class AIProctorService {
       throw new Error('AI Proctor not initialized. Call initialize() first.');
     }
     
-    const faceCount = await this.detectFaces(videoElement);
-    const phoneDetected = await this.detectPhone(videoElement);
-    
-    // Simple gaze estimation based on face presence
-    const isLookingAtScreen = this.estimateGaze(faceCount);
-    
-    return {
-      faceCount,
-      isLookingAtScreen,
-      phoneDetected,
-      timestamp: Date.now(),
-    };
+    try {
+      const faceCount = await this.detectFaces(videoElement);
+      const phoneDetected = await this.detectPhone(videoElement);
+      
+      // Gaze estimation based on face presence
+      const isLookingAtScreen = this.estimateGaze(faceCount);
+      
+      const result = {
+        faceCount,
+        isLookingAtScreen,
+        phoneDetected,
+        timestamp: Date.now(),
+      };
+      
+      // Log every 30 frames (roughly every second at 30fps)
+      if (Math.random() < 0.033) {
+        console.log('📊 Detection result:', result);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Detection error in analyzeFrame:', error);
+      // Return safe default
+      return {
+        faceCount: 1,
+        isLookingAtScreen: true,
+        phoneDetected: false,
+        timestamp: Date.now(),
+      };
+    }
   }
   
   /**
@@ -94,14 +125,29 @@ export class AIProctorService {
    */
   private async detectFaces(videoElement: HTMLVideoElement): Promise<number> {
     try {
+      if (!this.faceDetectionModel) {
+        console.warn('Face detection model not loaded');
+        return 0;
+      }
+      
       const predictions = await this.faceDetectionModel.estimateFaces(videoElement, false);
       
       // Filter by confidence
       const confidentFaces = predictions.filter(
-        (pred: any) => pred.probability[0] > this.FACE_CONFIDENCE_THRESHOLD
+        (pred: any) => {
+          const confidence = Array.isArray(pred.probability) ? pred.probability[0] : pred.probability;
+          return confidence > this.FACE_CONFIDENCE_THRESHOLD;
+        }
       );
       
-      return confidentFaces.length;
+      const count = confidentFaces.length;
+      
+      // Log face detection occasionally
+      if (Math.random() < 0.05) {
+        console.log(`👤 Detected ${count} face(s) with confidence >${this.FACE_CONFIDENCE_THRESHOLD}`);
+      }
+      
+      return count;
     } catch (error) {
       console.error('Face detection error:', error);
       return 0;
@@ -113,14 +159,26 @@ export class AIProctorService {
    */
   private async detectPhone(videoElement: HTMLVideoElement): Promise<boolean> {
     try {
-      if (!this.objectDetectionModel) return false;
+      if (!this.objectDetectionModel) {
+        console.warn('Object detection model not loaded');
+        return false;
+      }
       
       const predictions = await this.objectDetectionModel.detect(videoElement);
       
-      // Check for cell phone detection
+      // Log all detected objects occasionally
+      if (predictions.length > 0 && Math.random() < 0.1) {
+        console.log('🔍 Detected objects:', predictions.map(p => `${p.class} (${(p.score * 100).toFixed(1)}%)`));
+      }
+      
+      // Check for cell phone detection - LOWERED THRESHOLD
       const phoneDetected = predictions.some(
-        pred => pred.class === 'cell phone' && pred.score > 0.5
+        pred => pred.class === 'cell phone' && pred.score > 0.3 // Very low threshold!
       );
+      
+      if (phoneDetected) {
+        console.log('📱 PHONE DETECTED!', predictions.find(p => p.class === 'cell phone'));
+      }
       
       return phoneDetected;
     } catch (error) {
@@ -135,9 +193,16 @@ export class AIProctorService {
   private estimateGaze(faceCount: number): boolean {
     if (faceCount === 1) {
       this.consecutiveLookingAway = 0;
+      this.consecutiveNoFace = 0;
       return true;
+    } else if (faceCount === 0) {
+      this.consecutiveNoFace++;
+      this.consecutiveLookingAway = 0;
+      return false;
     } else {
+      // Multiple faces
       this.consecutiveLookingAway++;
+      this.consecutiveNoFace = 0;
       return false;
     }
   }
@@ -171,7 +236,14 @@ export class AIProctorService {
     score -= incidentCounts.absence * 8;
     
     // Ensure score is between 0 and 100
-    return Math.max(0, Math.min(100, score));
+    const finalScore = Math.max(0, Math.min(100, score));
+    
+    console.log('📊 Trust Score Calculation:', {
+      incidents: incidentCounts,
+      finalScore
+    });
+    
+    return finalScore;
   }
   
   /**
@@ -191,7 +263,6 @@ export class AIProctorService {
     const encoder = new TextEncoder();
     const data = encoder.encode(proofJSON);
     
-    // Generate SHA-256 hash
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -237,14 +308,17 @@ export class AIProctorService {
   ): IncidentLog[] {
     const newIncidents: IncidentLog[] = [...incidents];
     
-    // No face detected
-    if (detection.faceCount === 0 && this.canLogIncident('no_face')) {
-      newIncidents.push({
-        type: 'no_face',
-        timestamp: detection.timestamp,
-        details: 'No face detected in frame',
-      });
-      console.log('⚠️ Incident logged: No face detected');
+    // No face detected - with threshold
+    if (detection.faceCount === 0) {
+      if (this.consecutiveNoFace > this.NO_FACE_THRESHOLD && this.canLogIncident('no_face')) {
+        newIncidents.push({
+          type: 'no_face',
+          timestamp: detection.timestamp,
+          details: 'No face detected in frame',
+        });
+        console.log('🚨 INCIDENT LOGGED: No face detected');
+        this.consecutiveNoFace = 0; // Reset after logging
+      }
     }
     
     // Multiple faces detected
@@ -254,7 +328,7 @@ export class AIProctorService {
         timestamp: detection.timestamp,
         details: `${detection.faceCount} faces detected`,
       });
-      console.log(`⚠️ Incident logged: ${detection.faceCount} faces detected`);
+      console.log(`🚨 INCIDENT LOGGED: ${detection.faceCount} faces detected`);
     }
     
     // Looking away from screen
@@ -265,19 +339,19 @@ export class AIProctorService {
           timestamp: detection.timestamp,
           details: 'Excessive looking away detected',
         });
-        console.log('⚠️ Incident logged: Looking away');
+        console.log('🚨 INCIDENT LOGGED: Looking away from screen');
       }
       this.consecutiveLookingAway = 0; // Reset
     }
     
-    // Phone detected
+    // Phone detected - MOST IMPORTANT
     if (detection.phoneDetected && this.canLogIncident('phone_detected')) {
       newIncidents.push({
         type: 'phone_detected',
         timestamp: detection.timestamp,
         details: 'Mobile device detected in frame',
       });
-      console.log('⚠️ Incident logged: Phone detected');
+      console.log('🚨🚨🚨 INCIDENT LOGGED: PHONE DETECTED! 🚨🚨🚨');
     }
     
     return newIncidents;
