@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PeraWalletConnect } from '@perawallet/connect';
 import { StudentExam } from './components/StudentExam';
 import { AdminDashboard } from './components/AdminDashboard';
-import { setAppId, submitProofToBlockchain, getExplorerUrl } from './services/algorand-service';
+import { setAppId, submitProofToBlockchain, getExplorerUrl } from './components/services/algorand-service';
 import './App.css';
 
 // Initialize Pera Wallet
@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [examId, setExamId] = useState('');
   const [studentId, setStudentId] = useState('');
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
-  
+
   // Create exam form
   const [newExamId, setNewExamId] = useState('');
   const [newExamDuration, setNewExamDuration] = useState(60);
@@ -75,7 +75,7 @@ const App: React.FC = () => {
 
   const handleExamComplete = async (sessionData: any) => {
     console.log('📊 Exam completed:', sessionData);
-    
+
     // Save to localStorage
     const proofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
     proofs.push({
@@ -87,7 +87,7 @@ const App: React.FC = () => {
       incidents: sessionData.incidents.length,
     });
     localStorage.setItem('zkp_vault_proofs', JSON.stringify(proofs));
-    
+
     // Try blockchain submission
     try {
       if (accountAddress) {
@@ -101,7 +101,7 @@ const App: React.FC = () => {
       console.error('Blockchain submission error:', error);
       alert(`✅ Exam completed and saved locally!\n\nTrust Score: ${sessionData.trustScore}\n\n(Blockchain submission failed, but proof is saved)`);
     }
-    
+
     setCurrentView('home');
   };
 
@@ -110,14 +110,14 @@ const App: React.FC = () => {
       alert('Please enter an exam ID');
       return;
     }
-    
+
     // Check if exam already exists
     const exams = JSON.parse(localStorage.getItem('zkp_vault_exams') || '[]');
     if (exams.some((e: Exam) => e.examId === newExamId)) {
       alert('An exam with this ID already exists!');
       return;
     }
-    
+
     exams.push({
       examId: newExamId,
       duration: newExamDuration,
@@ -126,9 +126,9 @@ const App: React.FC = () => {
       createdBy: accountAddress || 'unknown',
     });
     localStorage.setItem('zkp_vault_exams', JSON.stringify(exams));
-    
+
     alert(`✅ Exam "${newExamId}" created successfully!`);
-    
+
     // Reset form
     setNewExamId('');
     setNewExamDuration(60);
@@ -141,21 +141,21 @@ const App: React.FC = () => {
       alert('Please enter an exam ID');
       return;
     }
-    
+
     if (!studentId.trim()) {
       alert('Please enter your student ID');
       return;
     }
-    
+
     // Check if exam exists
     const exams = JSON.parse(localStorage.getItem('zkp_vault_exams') || '[]');
     const exam = exams.find((e: Exam) => e.examId === examId);
-    
+
     if (!exam) {
       alert(`Exam "${examId}" not found!\n\nPlease check the exam ID or ask your instructor to create it.`);
       return;
     }
-    
+
     setSelectedExam(exam);
     setCurrentView('student');
   };
@@ -264,7 +264,7 @@ const App: React.FC = () => {
             <div className="card-icon">👨‍🎓</div>
             <h3>Take Exam</h3>
             <p>Start your proctored exam with AI monitoring</p>
-            
+
             <div className="form-group">
               <label>Exam ID *</label>
               <input
@@ -275,7 +275,7 @@ const App: React.FC = () => {
               />
               <small>Enter the exam ID provided by your instructor</small>
             </div>
-            
+
             <div className="form-group">
               <label>Student ID *</label>
               <input
@@ -300,7 +300,7 @@ const App: React.FC = () => {
             <div className="card-icon">👨‍💼</div>
             <h3>Admin Dashboard</h3>
             <p>View student proofs and exam analytics</p>
-            
+
             <div className="form-group">
               <label>Exam ID to Monitor *</label>
               <input
