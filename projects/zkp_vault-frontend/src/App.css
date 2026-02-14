@@ -346,10 +346,10 @@
 
 .back-btn {
   padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  color: white;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -357,7 +357,8 @@
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
 }
 
 /* Create Exam View */
@@ -490,12 +491,12 @@
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .header-actions {
     width: 100%;
     flex-direction: column;
   }
-  
+
   .export-button,
   .clear-button {
     width: 100%;
