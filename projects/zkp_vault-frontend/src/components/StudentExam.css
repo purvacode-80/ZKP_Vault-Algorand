@@ -1,3 +1,13 @@
+/* Ensure video section respects container width */
+.status-section .video-section {
+  width: 100%;
+}
+
+/* Optional: adjust video container height for better fit */
+.status-section .video-container {
+  max-height: 300px; /* adjust as needed */
+}
+
 .student-exam {
   min-height: 100vh;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -316,5 +326,90 @@
 }
 
 .incident-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Styling for Exam Question Section */
+
+.exam-questions-section {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.exam-questions-section h3 {
+  color: #00ff88;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.question-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.question-card:hover {
+  border-color: #00ff88;
+  transform: translateX(4px);
+}
+
+.question-card p {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.options label {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 14px;
+}
+
+.options label:hover {
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.options input[type="radio"] {
+  margin-right: 12px;
+  accent-color: #00ff88;
+  transform: scale(1.2);
+}
+
+.options input[type="radio"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling for questions area */
+.exam-questions-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+.exam-questions-section::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.exam-questions-section::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.exam-questions-section::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }

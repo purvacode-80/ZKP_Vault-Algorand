@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { getExplorerUrl } from '../services/algorand-service';
+import { getExplorerUrl } from './services/algorand-service';
 import './AdminDashboard.css';
 
 interface ProofData {
   studentHash: string;
   trustScore: number;
+  academicScore?: number;   // new field
   proofHash: string;
   timestamp: number;
   examId: string;
@@ -15,6 +16,7 @@ interface ProofData {
 interface ExamStats {
   totalSubmissions: number;
   averageTrustScore: number;
+  averageAcademicScore: number;  // new
   highIntegrity: number;
   mediumIntegrity: number;
   lowIntegrity: number;
@@ -30,6 +32,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
   const [stats, setStats] = useState<ExamStats>({
     totalSubmissions: 0,
     averageTrustScore: 0,
+    averageAcademicScore: 0,
     highIntegrity: 0,
     mediumIntegrity: 0,
     lowIntegrity: 0,
@@ -44,14 +47,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
 
   const loadProofs = () => {
     setIsLoading(true);
-
     try {
-      // Load proofs from localStorage
       const allProofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
-      
-      // Filter by exam ID
       const examProofs = allProofs.filter((p: any) => p.examId === examId);
-      
       setProofs(examProofs);
       calculateStats(examProofs);
     } catch (err) {
@@ -66,6 +64,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
     const averageTrustScore = totalSubmissions > 0
       ? proofList.reduce((sum, p) => sum + p.trustScore, 0) / totalSubmissions
       : 0;
+    const averageAcademicScore = totalSubmissions > 0
+      ? proofList.reduce((sum, p) => sum + (p.academicScore || 0), 0) / totalSubmissions
+      : 0;
 
     const highIntegrity = proofList.filter(p => p.trustScore > 90).length;
     const mediumIntegrity = proofList.filter(p => p.trustScore >= 70 && p.trustScore <= 90).length;
@@ -74,6 +75,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
     setStats({
       totalSubmissions,
       averageTrustScore: Math.round(averageTrustScore * 10) / 10,
+      averageAcademicScore: Math.round(averageAcademicScore * 10) / 10,
       highIntegrity,
       mediumIntegrity,
       lowIntegrity,
@@ -103,10 +105,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
 
   const exportReport = () => {
     const csvContent = [
-      ['Student Hash', 'Trust Score', 'Proof Hash', 'Timestamp', 'Incidents', 'Status'].join(','),
+      ['Student Hash', 'Trust Score', 'Academic Score', 'Proof Hash', 'Timestamp', 'Incidents', 'Status'].join(','),
       ...proofs.map(p => [
         p.studentHash,
         p.trustScore,
+        p.academicScore ?? '',
         p.proofHash,
         new Date(p.timestamp).toISOString(),
         p.incidents || 0,
@@ -150,7 +153,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         </div>
       </div>
 
-      {/* Statistics Section */}
+      {/* Statistics Grid */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">📝</div>
@@ -165,6 +168,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
           <div className="stat-content">
             <div className="stat-value">{stats.averageTrustScore}</div>
             <div className="stat-label">Average Trust Score</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">📚</div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.averageAcademicScore}</div>
+            <div className="stat-label">Average Academic Score</div>
           </div>
         </div>
 
@@ -202,30 +213,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-
         <div className="filter-buttons">
-          <button
-            className={filterStatus === 'all' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilterStatus('all')}
-          >
+          <button className={filterStatus === 'all' ? 'filter-btn active' : 'filter-btn'} onClick={() => setFilterStatus('all')}>
             All
           </button>
-          <button
-            className={filterStatus === 'high' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilterStatus('high')}
-          >
+          <button className={filterStatus === 'high' ? 'filter-btn active' : 'filter-btn'} onClick={() => setFilterStatus('high')}>
             High Integrity
           </button>
-          <button
-            className={filterStatus === 'medium' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilterStatus('medium')}
-          >
+          <button className={filterStatus === 'medium' ? 'filter-btn active' : 'filter-btn'} onClick={() => setFilterStatus('medium')}>
             Medium
           </button>
-          <button
-            className={filterStatus === 'low' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilterStatus('low')}
-          >
+          <button className={filterStatus === 'low' ? 'filter-btn active' : 'filter-btn'} onClick={() => setFilterStatus('low')}>
             Needs Review
           </button>
         </div>
@@ -249,6 +247,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
             <div className="table-header">
               <div className="col-hash">Student Hash</div>
               <div className="col-score">Trust Score</div>
+              <div className="col-academic">Academic Score</div>   {/* New column */}
               <div className="col-incidents">Incidents</div>
               <div className="col-status">Status</div>
               <div className="col-time">Timestamp</div>
@@ -267,6 +266,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
                       backgroundColor: proof.trustScore >= 90 ? '#00ff88' : proof.trustScore >= 70 ? '#ffaa00' : '#ff6b6b'
                     }}>
                       {proof.trustScore}
+                    </div>
+                  </div>
+                  <div className="col-academic">
+                    <div className="score-badge" style={{ backgroundColor: '#667eea' }}>
+                      {proof.academicScore !== undefined ? proof.academicScore : 'N/A'}
                     </div>
                   </div>
                   <div className="col-incidents">
