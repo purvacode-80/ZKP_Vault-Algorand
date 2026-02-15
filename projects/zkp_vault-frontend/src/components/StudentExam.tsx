@@ -41,7 +41,6 @@ export const StudentExam: React.FC<StudentExamProps> = ({
   examDuration,
   onComplete,
 }) => {
-
   const { accountAddress, peraWallet } = useWallet();
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -355,24 +354,30 @@ export const StudentExam: React.FC<StudentExamProps> = ({
     allProofs.push(newProof);
     localStorage.setItem('zkp_vault_proofs', JSON.stringify(allProofs));
 
+    // ✅ Call onComplete after local storage save
     onComplete(sessionData);
 
-    if (accountAddress && peraWallet) {
-    try {
-      const txId = await submitProofToBlockchain(
-        sessionData,
-        accountAddress,
-        peraWallet
-      );
-      console.log('✅ Blockchain submission successful, txId:', txId);
-      // Optionally show success message or store txId
-    } catch (err) {
-      console.error('Blockchain submission failed:', err);
-      // Notify user but don't fail the exam completion
-    }
-  }
+    // 👇 DEBUG: Log wallet address before blockchain submission
+    console.log('👤 accountAddress:', accountAddress);
+    console.log('📦 type:', typeof accountAddress);
 
-  onComplete(sessionData);
+    if (accountAddress && peraWallet) {
+      try {
+        const txId = await submitProofToBlockchain(
+          sessionData,
+          accountAddress,
+          peraWallet
+        );
+        console.log('✅ Blockchain submission successful, txId:', txId);
+        // Optionally show success message or store txId
+      } catch (err) {
+        console.error('Blockchain submission failed:', err);
+        // Notify user but don't fail the exam completion
+      }
+    } else {
+      console.warn('⚠️ Wallet not connected – proof stored only locally.');
+      alert('Your exam is saved locally. To store it on the blockchain, please connect your wallet and retake the exam.');
+    }
   };
 
   const formatTime = (seconds: number): string => {
@@ -385,7 +390,7 @@ export const StudentExam: React.FC<StudentExamProps> = ({
     setCurrentAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
-   return (
+  return (
     <div className="student-exam">
       <div className="exam-header">
         <h2>ZKP-Vault Exam: {examId}</h2>

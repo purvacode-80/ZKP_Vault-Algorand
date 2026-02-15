@@ -30,7 +30,7 @@ export async function submitProofToBlockchain(
 ): Promise<string> {
   try {
     console.log('📤 Submitting proof to Algorand...');
-    console.log('Sender address:', senderAddress); // Add this for debugging
+    console.log('Sender address:', senderAddress);
 
     const suggestedParams = await algodClient.getTransactionParams().do();
     const encoder = new TextEncoder();
@@ -43,27 +43,30 @@ export async function submitProofToBlockchain(
       encoder.encode(sessionData.proofHash),
     ];
 
-    // Build transaction WITHOUT a 'to' field
-    const txn = new algosdk.Transaction({
-      from: senderAddress,
-      // to: undefined,   ← DO NOT INCLUDE
-      fee: suggestedParams.fee,
-      firstRound: suggestedParams.firstRound,
-      lastRound: suggestedParams.lastRound,
-      genesisID: suggestedParams.genesisID,
-      genesisHash: suggestedParams.genesisHash,
-      type: 'appl',                   // application call
-      appIndex: APP_ID,
-      appOnComplete: 0,                // NoOp
-      appArgs: appArgs,
-      // optional fields omitted for clarity
-    });
+    // // ✅ Build the transaction with correct field names
+    //   sconst txn = new algosdk.Transaction({
+    //   sender: senderAddress,
+    //   fee: suggestedParams.fee,
+    //   firstValid: suggestedParams.firstRound,   // note: property firstValid, value from firstRound
+    //   lastValid: suggestedParams.lastRound,     // note: property lastValid, value from lastRound
+    //   genesisID: suggestedParams.genesisID,
+    //   genesisHash: suggestedParams.genesisHash,
+    //   type: algosdk.TransactionType.appl,       // use the enum, not the string "appl"
+    //   appIndex: APP_ID,
+    //   appOnComplete: 0,                          // NoOp
+    //   appArgs: appArgs,
+    // });
 
+    // Sign the transaction
     const signedTxns = await peraWallet.signTransaction([txn]);
+
+    // Submit
     const response = await algodClient.sendRawTransaction(signedTxns).do();
     const txid = response.txid;
 
+    // Wait for confirmation
     await algosdk.waitForConfirmation(algodClient, txid, 3);
+
     console.log('✅ Proof submitted! Transaction ID:', txid);
     return txid;
   } catch (error) {

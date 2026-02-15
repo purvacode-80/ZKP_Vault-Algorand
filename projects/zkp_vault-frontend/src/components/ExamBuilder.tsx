@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import './AdminDashboard.css';
 
-// Types (can be moved to a shared file)
+// Types
 interface Question {
   id: string;
   text: string;
@@ -11,7 +12,7 @@ interface Question {
 interface Exam {
   examId: string;
   title: string;
-  duration: number; // minutes
+  duration: number;
   questions: Question[];
   createdAt: number;
   createdBy?: string;
@@ -26,14 +27,15 @@ export const ExamBuilder: React.FC = () => {
     questions: [],
     createdAt: Date.now(),
   });
+  const [editingExamId, setEditingExamId] = useState<string | null>(null);
+  const[isEditing, setIsEditing] = useState(false);
 
-  // Load and sanitize exams from localStorage
+  // Load exams from localStorage
   useEffect(() => {
     const stored = localStorage.getItem('zkp_vault_exams');
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        // Ensure every exam has a questions array (default to empty)
         const sanitized = parsed.map((exam: any) => ({
           ...exam,
           questions: exam.questions || [],
@@ -98,21 +100,36 @@ export const ExamBuilder: React.FC = () => {
       return;
     }
 
-    if (exams.some(e => e.examId === currentExam.examId)) {
-      alert('An exam with this ID already exists. Please choose a different ID.');
-      return;
+    // If editing, update existing exam
+    if (editingExamId) {
+      const updatedExams = exams.map(exam =>
+        exam.examId === editingExamId
+          ? {
+              ...exam,
+              title: currentExam.title!,
+              duration: currentExam.duration!,
+              questions: currentExam.questions!,
+            }
+          : exam
+      );
+      saveExams(updatedExams);
+      setEditingExamId(null);
+    } else {
+      // Creating new exam – check for duplicate ID
+      if (exams.some(e => e.examId === currentExam.examId)) {
+        alert('An exam with this ID already exists. Please choose a different ID.');
+        return;
+      }
+      const newExam: Exam = {
+        examId: currentExam.examId,
+        title: currentExam.title,
+        duration: currentExam.duration,
+        questions: currentExam.questions,
+        createdAt: Date.now(),
+        createdBy: 'admin',
+      };
+      saveExams([...exams, newExam]);
     }
-
-    const newExam: Exam = {
-      examId: currentExam.examId,
-      title: currentExam.title,
-      duration: currentExam.duration,
-      questions: currentExam.questions,
-      createdAt: Date.now(),
-      createdBy: 'admin',
-    };
-
-    saveExams([...exams, newExam]);
 
     // Reset form
     setCurrentExam({
@@ -131,19 +148,44 @@ export const ExamBuilder: React.FC = () => {
     }
   };
 
+  const editExam = (exam: Exam) => {
+    setCurrentExam({
+      examId: exam.examId,
+      title: exam.title,
+      duration: exam.duration,
+      questions: exam.questions,
+      createdAt: exam.createdAt,
+    });
+    setEditingExamId(exam.examId);
+    setIsEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingExamId(null);
+    setIsEditing(false);
+    setCurrentExam({
+      examId: '',
+      title: '',
+      duration: 60,
+      questions: [],
+      createdAt: Date.now(),
+    });
+  };
+
   return (
     <div className="admin-dashboard" style={{ padding: '20px' }}>
       <h1>📝 Exam Builder</h1>
 
       {/* Form to create/edit exam */}
       <div className="filters-section" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-        <h2>Create New Exam</h2>
+        <h2>{editingExamId ? 'Edit Exam' : 'Create New Exam'}</h2>
         <input
           type="text"
           placeholder="Exam ID (unique, e.g., MATH101)"
           value={currentExam.examId}
           onChange={e => setCurrentExam({ ...currentExam, examId: e.target.value })}
           className="search-input"
+          disabled={!!editingExamId} // Disable when editing
         />
         <input
           type="text"
@@ -204,8 +246,13 @@ export const ExamBuilder: React.FC = () => {
             ➕ Add Question
           </button>
           <button onClick={saveExam} className="export-button" style={{ background: 'linear-gradient(135deg, #00ff88 0%, #00cc6f 100%)' }}>
-            💾 Save Exam
+            {editingExamId ? '✏️ Update Exam' : '💾 Save Exam'}
           </button>
+          {editingExamId && (
+            <button onClick={cancelEdit} className="filter-btn" style={{ background: '#ffaa00' }}>
+              Cancel
+            </button>
+          )}
         </div>
       </div>
 
@@ -216,33 +263,45 @@ export const ExamBuilder: React.FC = () => {
           <p className="empty-state">No exams created yet.</p>
         ) : (
           <div className="proofs-table">
-            <div className="table-header">
-              <div>Exam ID</div>
-              <div>Title</div>
-              <div>Duration</div>
-              <div>Questions</div>
-              <div>Created</div>
-              <div>Actions</div>
-            </div>
-            {exams.map(exam => (
-              <div key={exam.examId} className="table-row">
-                <div><code>{exam.examId}</code></div>
-                <div>{exam.title}</div>
-                <div>{exam.duration} min</div>
-                {/* ✅ Use optional chaining to safely access questions.length */}
-                <div>{exam.questions?.length ?? 0}</div>
-                <div>{new Date(exam.createdAt).toLocaleDateString()}</div>
-                <div>
-                  <button
-                    onClick={() => deleteExam(exam.examId)}
-                    className="filter-btn"
-                    style={{ background: '#ff6b6b' }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+            <table>
+              <thead>
+                <tr className="table-header">
+                  <th>Exam ID</th>
+                  <th>Title</th>
+                  <th>Duration</th>
+                  <th>Questions</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exams.map(exam => (
+                  <tr key={exam.examId} className="table-row">
+                    <td data-label="Exam ID"><code>{exam.examId}</code></td>
+                    <td data-label="Title">{exam.title}</td>
+                    <td data-label="Duration">{exam.duration} min</td>
+                    <td data-label="Questions">{exam.questions?.length ?? 0}</td>
+                    <td data-label="Created">{new Date(exam.createdAt).toLocaleDateString()}</td>
+                    <td data-label="Actions">
+                      <button
+                        onClick={() => editExam(exam)}
+                        className="filter-btn"
+                        style={{ background: '#667eea', marginRight: '8px' }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => deleteExam(exam.examId)}
+                        className="filter-btn"
+                        style={{ background: '#ff6b6b' }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

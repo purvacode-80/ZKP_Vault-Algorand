@@ -5,7 +5,7 @@ import { StudentExam } from './StudentExam';
 
 export const StudentDashboard: React.FC = () => {
   const { logout, user } = useAuth();
-  const { accountAddress } = useWallet(); // 👈 get wallet address
+  const { accountAddress } = useWallet(); // get wallet address
   const [examId, setExamId] = useState('');
   const [startExam, setStartExam] = useState(false);
   const [studentId] = useState(user?.email || 'student'); // Use email as student ID for demo
@@ -49,7 +49,7 @@ export const StudentDashboard: React.FC = () => {
             <button
               className="start-button"
               onClick={() => setStartExam(true)}
-              disabled={!examId || !accountAddress} // 👈 disabled if missing examId OR wallet
+              disabled={!examId || !accountAddress} // disabled if missing examId OR wallet
               style={{ marginTop: '20px', width: '100%' }}
             >
               Start Exam

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { AdminDashboard } from './AdminDashboard';
 import { ExamBuilder } from './ExamBuilder';
+import './AdminDashboard.css';
 
 export const AdminHome: React.FC = () => {
   const { logout } = useAuth();

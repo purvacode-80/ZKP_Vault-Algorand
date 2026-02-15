@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { WalletProvider, useWallet } from './context/WalletContext';
 import { Login } from './components/Login';
-import { Signup } from './components/SignUp';
+import { Signup } from './components/Signup';
 import { StudentDashboard } from './components/StudentDashboard';
 import { AdminHome } from './components/AdminHome';
 import './App.css';

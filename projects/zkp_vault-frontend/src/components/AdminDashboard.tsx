@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { getExplorerUrl } from './services/algorand-service';
+// import { getExplorerUrl } from './services/algorand-service';
 import './AdminDashboard.css';
 
 interface ProofData {
   studentHash: string;
   trustScore: number;
-  academicScore?: number;   // new field
+  academicScore?: number;
   proofHash: string;
   timestamp: number;
   examId: string;
@@ -16,7 +16,7 @@ interface ProofData {
 interface ExamStats {
   totalSubmissions: number;
   averageTrustScore: number;
-  averageAcademicScore: number;  // new
+  averageAcademicScore: number;
   highIntegrity: number;
   mediumIntegrity: number;
   lowIntegrity: number;
@@ -153,8 +153,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         </div>
       </div>
 
-      {/* Statistics Grid */}
+      {/* Statistics Grid (unchanged) */}
       <div className="stats-grid">
+        {/* ... stats cards remain the same ... */}
         <div className="stat-card">
           <div className="stat-icon">📝</div>
           <div className="stat-content">
@@ -162,7 +163,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
             <div className="stat-label">Total Submissions</div>
           </div>
         </div>
-
         <div className="stat-card">
           <div className="stat-icon">⭐</div>
           <div className="stat-content">
@@ -170,7 +170,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
             <div className="stat-label">Average Trust Score</div>
           </div>
         </div>
-
         <div className="stat-card">
           <div className="stat-icon">📚</div>
           <div className="stat-content">
@@ -178,7 +177,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
             <div className="stat-label">Average Academic Score</div>
           </div>
         </div>
-
         <div className="stat-card highlight-green">
           <div className="stat-icon">🟢</div>
           <div className="stat-content">
@@ -186,7 +184,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
             <div className="stat-label">High Integrity (&gt;90)</div>
           </div>
         </div>
-
         <div className="stat-card highlight-yellow">
           <div className="stat-icon">🟡</div>
           <div className="stat-content">
@@ -194,7 +191,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
             <div className="stat-label">Medium (70-90)</div>
           </div>
         </div>
-
         <div className="stat-card highlight-red">
           <div className="stat-icon">🔴</div>
           <div className="stat-content">
@@ -204,7 +200,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters (unchanged) */}
       <div className="filters-section">
         <input
           type="text"
@@ -229,7 +225,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         </div>
       </div>
 
-      {/* Proofs Table */}
+      {/* Proofs Table - now using <table> */}
       <div className="proofs-section">
         <h2>Student Proofs</h2>
 
@@ -244,57 +240,62 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
           </div>
         ) : (
           <div className="proofs-table">
-            <div className="table-header">
-              <div className="col-hash">Student Hash</div>
-              <div className="col-score">Trust Score</div>
-              <div className="col-academic">Academic Score</div>   {/* New column */}
-              <div className="col-incidents">Incidents</div>
-              <div className="col-status">Status</div>
-              <div className="col-time">Timestamp</div>
-              <div className="col-blockchain">Proof Hash</div>
-            </div>
-
-            {filteredProofs.map((proof, index) => {
-              const status = getStatusBadge(proof.trustScore);
-              return (
-                <div key={index} className="table-row">
-                  <div className="col-hash">
-                    <code>{proof.studentHash.substring(0, 16)}...</code>
-                  </div>
-                  <div className="col-score">
-                    <div className="score-badge" style={{
-                      backgroundColor: proof.trustScore >= 90 ? '#00ff88' : proof.trustScore >= 70 ? '#ffaa00' : '#ff6b6b'
-                    }}>
-                      {proof.trustScore}
-                    </div>
-                  </div>
-                  <div className="col-academic">
-                    <div className="score-badge" style={{ backgroundColor: '#667eea' }}>
-                      {proof.academicScore !== undefined ? proof.academicScore : 'N/A'}
-                    </div>
-                  </div>
-                  <div className="col-incidents">
-                    {proof.incidents || 0}
-                  </div>
-                  <div className="col-status">
-                    <span className={`status-badge ${status.className}`}>
-                      {status.icon} {status.label}
-                    </span>
-                  </div>
-                  <div className="col-time">
-                    {new Date(proof.timestamp).toLocaleString()}
-                  </div>
-                  <div className="col-blockchain">
-                    <code className="proof-hash-mini">{proof.proofHash.substring(0, 12)}...</code>
-                  </div>
-                </div>
-              );
-            })}
+            <table>
+              <thead>
+                <tr className="table-header">
+                  <th className="col-hash">Student Hash</th>
+                  <th className="col-score">Trust Score</th>
+                  <th className="col-academic">Academic Score</th>
+                  <th className="col-incidents">Incidents</th>
+                  <th className="col-status">Status</th>
+                  <th className="col-time">Timestamp</th>
+                  <th className="col-blockchain">Proof Hash</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProofs.map((proof, index) => {
+                  const status = getStatusBadge(proof.trustScore);
+                  return (
+                    <tr key={index} className="table-row">
+                      <td className="col-hash">
+                        <code>{proof.studentHash.substring(0, 16)}...</code>
+                      </td>
+                      <td className="col-score">
+                        <div className="score-badge" style={{
+                          backgroundColor: proof.trustScore >= 90 ? '#00ff88' : proof.trustScore >= 70 ? '#ffaa00' : '#ff6b6b'
+                        }}>
+                          {proof.trustScore}
+                        </div>
+                      </td>
+                      <td className="col-academic">
+                        <div className="score-badge" style={{ backgroundColor: '#667eea' }}>
+                          {proof.academicScore !== undefined ? proof.academicScore : 'N/A'}
+                        </div>
+                      </td>
+                      <td className="col-incidents">
+                        {proof.incidents || 0}
+                      </td>
+                      <td className="col-status">
+                        <span className={`status-badge ${status.className}`}>
+                          {status.icon} {status.label}
+                        </span>
+                      </td>
+                      <td className="col-time">
+                        {new Date(proof.timestamp).toLocaleString()}
+                      </td>
+                      <td className="col-blockchain">
+                        <code className="proof-hash-mini">{proof.proofHash.substring(0, 12)}...</code>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
-      {/* Privacy Notice */}
+      {/* Privacy Notice (unchanged) */}
       <div className="privacy-notice">
         <div className="notice-icon">🔒</div>
         <div className="notice-content">
