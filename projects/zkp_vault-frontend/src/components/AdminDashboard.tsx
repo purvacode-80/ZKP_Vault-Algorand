@@ -40,6 +40,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [selectedProof, setSelectedProof] = useState<ProofData | null>(null);
 
   useEffect(() => {
     loadProofs();
@@ -134,6 +135,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
     }
   };
 
+  const openDetails = (proof: ProofData) => setSelectedProof(proof);
+  const closeDetails = () => setSelectedProof(null);
+
   return (
     <div className="admin-dashboard">
       <div className="dashboard-header">
@@ -153,9 +157,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         </div>
       </div>
 
-      {/* Statistics Grid (unchanged) */}
+      {/* Statistics Grid */}
       <div className="stats-grid">
-        {/* ... stats cards remain the same ... */}
         <div className="stat-card">
           <div className="stat-icon">📝</div>
           <div className="stat-content">
@@ -200,7 +203,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         </div>
       </div>
 
-      {/* Filters (unchanged) */}
+      {/* Filters */}
       <div className="filters-section">
         <input
           type="text"
@@ -225,7 +228,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         </div>
       </div>
 
-      {/* Proofs Table - now using <table> */}
+      {/* Proofs Table */}
       <div className="proofs-section">
         <h2>Student Proofs</h2>
 
@@ -250,6 +253,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
                   <th className="col-status">Status</th>
                   <th className="col-time">Timestamp</th>
                   <th className="col-blockchain">Proof Hash</th>
+                  <th className="col-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -257,34 +261,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
                   const status = getStatusBadge(proof.trustScore);
                   return (
                     <tr key={index} className="table-row">
-                      <td className="col-hash">
+                      <td className="col-hash" data-label="Student Hash">
                         <code>{proof.studentHash.substring(0, 16)}...</code>
                       </td>
-                      <td className="col-score">
+                      <td className="col-score" data-label="Trust Score">
                         <div className="score-badge" style={{
                           backgroundColor: proof.trustScore >= 90 ? '#00ff88' : proof.trustScore >= 70 ? '#ffaa00' : '#ff6b6b'
                         }}>
                           {proof.trustScore}
                         </div>
                       </td>
-                      <td className="col-academic">
+                      <td className="col-academic" data-label="Academic Score">
                         <div className="score-badge" style={{ backgroundColor: '#667eea' }}>
                           {proof.academicScore !== undefined ? proof.academicScore : 'N/A'}
                         </div>
                       </td>
-                      <td className="col-incidents">
+                      <td className="col-incidents" data-label="Incidents">
                         {proof.incidents || 0}
                       </td>
-                      <td className="col-status">
+                      <td className="col-status" data-label="Status">
                         <span className={`status-badge ${status.className}`}>
                           {status.icon} {status.label}
                         </span>
                       </td>
-                      <td className="col-time">
+                      <td className="col-time" data-label="Timestamp">
                         {new Date(proof.timestamp).toLocaleString()}
                       </td>
-                      <td className="col-blockchain">
+                      <td className="col-blockchain" data-label="Proof Hash">
                         <code className="proof-hash-mini">{proof.proofHash.substring(0, 12)}...</code>
+                      </td>
+                      <td className="col-actions" data-label="Actions">
+                        <button
+                          className="view-details-btn"
+                          onClick={() => openDetails(proof)}
+                        >
+                          👁️ View
+                        </button>
                       </td>
                     </tr>
                   );
@@ -295,7 +307,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
         )}
       </div>
 
-      {/* Privacy Notice (unchanged) */}
+      {/* Privacy Notice */}
       <div className="privacy-notice">
         <div className="notice-icon">🔒</div>
         <div className="notice-content">
@@ -306,6 +318,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ examId, appId })
           </p>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {selectedProof && (
+        <div className="modal-overlay" onClick={closeDetails}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Proof Details</h3>
+            <div className="modal-body">
+              <p><strong>Student Hash:</strong> <code className="full-hash">{selectedProof.studentHash}</code></p>
+              <p><strong>Trust Score:</strong> {selectedProof.trustScore}</p>
+              <p><strong>Academic Score:</strong> {selectedProof.academicScore !== undefined ? selectedProof.academicScore : 'N/A'}</p>
+              <p><strong>Incidents:</strong> {selectedProof.incidents || 0}</p>
+              <p><strong>Status:</strong> {getStatusBadge(selectedProof.trustScore).label}</p>
+              <p><strong>Timestamp:</strong> {new Date(selectedProof.timestamp).toLocaleString()}</p>
+              <p><strong>Proof Hash:</strong> <code className="full-hash">{selectedProof.proofHash}</code></p>
+              {selectedProof.txId && (
+                <p>
+                  <strong>Transaction ID:</strong>{' '}
+                  <a
+                    href={getExplorerUrl(selectedProof.txId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="explorer-link"
+                  >
+                    {selectedProof.txId} ↗
+                  </a>
+                </p>
+              )}
+            </div>
+            <button className="close-modal-btn" onClick={closeDetails}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

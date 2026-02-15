@@ -33,7 +33,7 @@ importers:
         specifier: ^4.0.0
         version: 4.5.0(@blockshake/defly-connect@1.2.1(algosdk@3.5.2))(@perawallet/connect@1.5.0(algosdk@3.5.2))(algosdk@3.5.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       algosdk:
-        specifier: ^3.0.0
+        specifier: ^3.5.2
         version: 3.5.2
       buffer:
         specifier: ^6.0.3

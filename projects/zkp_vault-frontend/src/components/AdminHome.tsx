@@ -73,7 +73,7 @@ export const AdminHome: React.FC = () => {
               onClick={() => setView('builder')}
               style={{ marginTop: '20px', width: '100%' }}
             >
-              Create/Edit Exams
+              Create / Edit Exams
             </button>
           </div>
         </div>

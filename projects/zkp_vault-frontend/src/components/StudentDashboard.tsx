@@ -1,21 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useWallet } from '../context/WalletContext';
 import { StudentExam } from './StudentExam';
 
+// Helper to generate the same student hash as in StudentExam
+async function hashStudentId(studentId: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`${studentId}_zkp-vault`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export const StudentDashboard: React.FC = () => {
   const { logout, user } = useAuth();
-  const { accountAddress } = useWallet(); // get wallet address
+  const { accountAddress } = useWallet();
   const [examId, setExamId] = useState('');
   const [startExam, setStartExam] = useState(false);
-  const [studentId] = useState(user?.email || 'student'); // Use email as student ID for demo
+  const [alreadyTaken, setAlreadyTaken] = useState(false);
+  const [takenDate, setTakenDate] = useState<string | null>(null);
+  const studentId = user?.email || 'student';
+
+  useEffect(() => {
+    const checkIfTaken = async () => {
+      if (!examId || !studentId) {
+        setAlreadyTaken(false);
+        setTakenDate(null);
+        return;
+      }
+
+      try {
+        const studentHash = await hashStudentId(studentId);
+        const allProofs = JSON.parse(localStorage.getItem('zkp_vault_proofs') || '[]');
+        const existing = allProofs.find((p: any) => p.examId === examId && p.studentHash === studentHash);
+        if (existing) {
+          setAlreadyTaken(true);
+          setTakenDate(new Date(existing.timestamp).toLocaleString());
+        } else {
+          setAlreadyTaken(false);
+          setTakenDate(null);
+        }
+      } catch (error) {
+        console.error('Failed to check exam status:', error);
+      }
+    };
+
+    checkIfTaken();
+  }, [examId, studentId]);
 
   if (startExam) {
     return (
       <StudentExam
         examId={examId}
         studentId={studentId}
-        examDuration={60} // will be overridden by loaded exam
+        examDuration={60}
         onComplete={() => setStartExam(false)}
       />
     );
@@ -41,15 +79,23 @@ export const StudentDashboard: React.FC = () => {
               style={{ marginTop: '10px', width: '100%' }}
               className="search-input"
             />
+
+            {alreadyTaken && (
+              <p style={{ color: '#ffaa00', marginTop: '8px', fontSize: '14px' }}>
+                ⚠️ You have already taken this exam on {takenDate}.
+              </p>
+            )}
+
             {!accountAddress && (
               <p style={{ color: '#ffaa00', marginTop: '8px', fontSize: '14px' }}>
                 ⚠️ Please connect your wallet first.
               </p>
             )}
+
             <button
               className="start-button"
               onClick={() => setStartExam(true)}
-              disabled={!examId || !accountAddress} // disabled if missing examId OR wallet
+              disabled={!examId || !accountAddress || alreadyTaken}
               style={{ marginTop: '20px', width: '100%' }}
             >
               Start Exam

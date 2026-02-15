@@ -373,6 +373,133 @@
   line-height: 1.6;
 }
 
+// View Details Modal
+
+/* View Details button */
+.view-details-btn {
+  padding: 6px 12px;
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  border-radius: 6px;
+  color: #667eea;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-details-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal content */
+.modal-content {
+  background: #1a1a2e;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0, 255, 136, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-content h3 {
+  color: #00ff88;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.modal-body p {
+  margin: 12px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.modal-body strong {
+  color: #00ff88;
+  font-weight: 600;
+  min-width: 120px;
+  display: inline-block;
+}
+
+.modal-body .full-hash {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  background: rgba(0, 255, 136, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #00ff88;
+  word-break: break-all;
+}
+
+.close-modal-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-modal-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #00ff88;
+}
+
+/* Adjust table for new column */
+.table-header th,
+.table-row td {
+  /* The 8-column layout is already handled by the existing grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr 2fr 1.5fr 1fr; */
+  /* Ensure we added the 8th column in the grid definition. */
+}
+
+/* If you haven't already, update the .table-header, .table-row grid-template-columns to include 8 columns: */
+.table-header,
+.table-row {
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr 2fr 1.5fr 1fr;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .table-header,

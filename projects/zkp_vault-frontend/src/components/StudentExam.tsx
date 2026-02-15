@@ -361,6 +361,8 @@ export const StudentExam: React.FC<StudentExamProps> = ({
     console.log('👤 accountAddress:', accountAddress);
     console.log('📦 type:', typeof accountAddress);
 
+    alert('Exam submitted! Your trust score is ' + trustScore + ' and academic score is ' + academicScore + '.');
+
     if (accountAddress && peraWallet) {
       try {
         const txId = await submitProofToBlockchain(
@@ -461,13 +463,6 @@ export const StudentExam: React.FC<StudentExamProps> = ({
           </div>
 
           {/* Status Cards (privacy, trust score, etc.) */}
-          <div className="privacy-status">
-            <div className="status-icon">🟢</div>
-            <div className="status-text">
-              <h3>Privacy Protected</h3>
-              <p>No video data leaves this device</p>
-            </div>
-          </div>
 
           <div className="trust-score">
             <h4>Trust Score</h4>
@@ -481,6 +476,14 @@ export const StudentExam: React.FC<StudentExamProps> = ({
               />
             </div>
             <div className="score-value">{trustScore}</div>
+          </div>
+
+          <div className="privacy-status">
+            <div className="status-icon">🟢</div>
+            <div className="status-text">
+              <h3>Privacy Protected</h3>
+              <p>No video data leaves this device</p>
+            </div>
           </div>
 
           <div className="detection-status">
