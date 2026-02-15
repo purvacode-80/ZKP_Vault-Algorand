@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { submitProofToBlockchain } from './services/algorand-service';
+import { useWallet } from '../context/WalletContext';
 import './StudentExam.css';
 
 // --- Types for exam questions (can be moved to a separate file) ---
@@ -40,6 +41,9 @@ export const StudentExam: React.FC<StudentExamProps> = ({
   examDuration,
   onComplete,
 }) => {
+
+  const { accountAddress, peraWallet } = useWallet();
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const detectionIntervalRef = useRef<any>(null);
@@ -352,6 +356,23 @@ export const StudentExam: React.FC<StudentExamProps> = ({
     localStorage.setItem('zkp_vault_proofs', JSON.stringify(allProofs));
 
     onComplete(sessionData);
+
+    if (accountAddress && peraWallet) {
+    try {
+      const txId = await submitProofToBlockchain(
+        sessionData,
+        accountAddress,
+        peraWallet
+      );
+      console.log('✅ Blockchain submission successful, txId:', txId);
+      // Optionally show success message or store txId
+    } catch (err) {
+      console.error('Blockchain submission failed:', err);
+      // Notify user but don't fail the exam completion
+    }
+  }
+
+  onComplete(sessionData);
   };
 
   const formatTime = (seconds: number): string => {
